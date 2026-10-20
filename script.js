@@ -3,7 +3,7 @@ const TOTAL_NUMBERS = 1000; // Numeración del 000 al 999
 
 // Número de WhatsApp de la ADMINISTRACIÓN (formato internacional sin '+' ni símbolos)
 // Ejemplo EE. UU. (305) 123-4567 -> "13051234567"
-const ADMIN_WHATSAPP_PHONE = "13050000000";
+const ADMIN_WHATSAPP_PHONE = "1732819161";
 
 const STORAGE_KEYS = {
   SOLD_NUMBERS: "rifa_sold_v3",
