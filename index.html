@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#101010">
+  <title>Rifa Familiar | Elige tus números</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+
+  <header class="site-header">
+    <a class="brand" href="#">
+      <span class="brand-mark">RF</span>
+      <span>RIFA <strong>FAMILIAR</strong></span>
+    </a>
+    <span class="header-tag">EDICIÓN ESPECIAL VEHÍCULO</span>
+  </header>
+
+  <main>
+    <section class="hero">
+      <p class="eyebrow"><span></span>Sorteo oficial</p>
+      <h1>Tu número.<br><span>Tu oportunidad.</span></h1>
+      <p class="hero-copy">Elige tus números favoritos, aparta tus boletos y asegura tu participación en nuestra gran rifa.</p>
+      <div class="hero-price">
+        <span class="price-label">PRECIO POR BOLETA</span>
+        <span class="price">$30 <small>USD</small></span>
+      </div>
+      <div class="hero-rule"></div>
+      <p class="demo-note"><span class="demo-dot"></span> Los números apartados quedan en amarillo hasta que se confirme el pago o abono</p>
+    </section>
+
+    <section class="content-section" aria-labelledby="numbers-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">PARTICIPA</p>
+          <h2 id="numbers-title">Elige tus números</h2>
+          <p class="section-copy">Toca uno o varios números disponibles para seleccionarlos.</p>
+        </div>
+        <div class="availability">
+          <span class="status-dot"></span> Tablero en tiempo real
+        </div>
+      </div>
+
+      <!-- LEYENDA -->
+      <div class="legend" aria-label="Leyenda de estados">
+        <span><i class="legend-box available"></i> Disponible</span>
+        <span><i class="legend-box selected"></i> Tu selección</span>
+        <span><i class="legend-box pending"></i> Apartado / En revisión</span>
+        <span><i class="legend-box sold"></i> Vendido</span>
+      </div>
+
+      <div class="toolbar">
+        <label class="search-box">
+          <span aria-hidden="true">⌕</span>
+          <input id="search-number" type="search" inputmode="numeric" placeholder="Buscar número (ej. 042)" aria-label="Buscar número">
+        </label>
+        <button id="clear-selection" class="text-button" type="button">Limpiar selección</button>
+      </div>
+
+      <div id="numbers-grid" class="numbers-grid" aria-label="Números de la rifa"></div>
+      <div id="empty-search" class="empty-search" hidden>No hay números que coincidan con esa búsqueda.</div>
+
+      <div class="selection-summary">
+        <div>
+          <p class="summary-label">TU SELECCIÓN</p>
+          <p id="selection-count" class="summary-value">0 números</p>
+          <p id="selection-preview" class="summary-preview">Todavía no has elegido números.</p>
+        </div>
+        <div class="summary-total">
+          <p class="summary-label">TOTAL</p>
+          <p id="selection-total" class="total-value">$0 <small>USD</small></p>
+        </div>
+      </div>
+
+      <button id="whatsapp-button" class="primary-button" type="button" disabled>
+        Continuar con la reserva <span aria-hidden="true">↗</span>
+      </button>
+
+      <p class="fine-print">
+        Al continuar, tus números quedarán apartados (en amarillo) de inmediato para proteger tu turno mientras gestionas el pago o abono.
+      </p>
+    </section>
+
+    <section class="how-it-works">
+      <p class="eyebrow">PASO A PASO</p>
+      <h2>¿Cómo participar?</h2>
+      <div class="steps">
+        <article class="step">
+          <span class="step-number">01</span>
+          <h3>Elige</h3>
+          <p>Selecciona tus boletos favoritos disponibles en el tablero.</p>
+        </article>
+        <article class="step">
+          <span class="step-number">02</span>
+          <h3>Aparta tus números</h3>
+          <p>Indica tu nombre y teléfono de EE.UU. Quedarán apartados en amarillo para que nadie más los tome.</p>
+        </article>
+        <article class="step">
+          <span class="step-number">03</span>
+          <h3>Pago o abono a plazos</h3>
+          <p>Envía tu comprobante de pago completo o coordina tu plan de abonos a plazos directamente por WhatsApp.</p>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <span class="brand-mark small">RF</span>
+    <p>Rifa Familiar <span>·</span> Edición Especial</p>
+    <p class="footer-note">Administración y atención directa por WhatsApp.</p>
+  </footer>
+
+  <!-- MODAL DE DATOS DE CONTACTO (EE.UU. - 10 DÍGITOS DIRECTOS) -->
+  <dialog id="checkout-dialog" class="checkout-dialog">
+    <div class="dialog-header">
+      <div>
+        <p class="eyebrow">RESERVA DE BOLETAS</p>
+        <h2>Tus datos de contacto</h2>
+      </div>
+      <button type="button" id="close-checkout" class="close-button" aria-label="Cerrar modal">×</button>
+    </div>
+
+    <form id="checkout-form">
+      <p class="muted">
+        Indica tu nombre y número de teléfono de Estados Unidos (10 dígitos) para contactarte en caso de resultar ganador.
+      </p>
+
+      <div class="checkout-summary-box">
+        <div class="row">
+          <span>Boletas seleccionadas:</span>
+          <strong id="modal-tickets-preview">-</strong>
+        </div>
+        <div class="row">
+          <span>Total de la solicitud:</span>
+          <strong id="modal-total-preview" class="gold-text">$0 USD</strong>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="buyer-name">Nombre y apellido</label>
+        <input type="text" id="buyer-name" placeholder="Ej. Carlos Mendoza" required autocomplete="name">
+      </div>
+
+      <div class="form-group">
+        <label for="buyer-country">País de contacto</label>
+        <select id="buyer-country" required>
+          <option value="1" data-digits="10" selected>🇺🇸 Estados Unidos (+1)</option>
+          <option value="52" data-digits="10">🇲🇽 México (+52)</option>
+          <option value="57" data-digits="10">🇨🇴 Colombia (+57)</option>
+          <option value="58" data-digits="10">🇻🇪 Venezuela (+58)</option>
+          <option value="34" data-digits="9">🇪🇸 España (+34)</option>
+          <option value="51" data-digits="9">🇵🇪 Perú (+51)</option>
+          <option value="56" data-digits="9">🇨🇱 Chile (+56)</option>
+          <option value="54" data-digits="10">🇦🇷 Argentina (+54)</option>
+          <option value="593" data-digits="9">🇪🇨 Ecuador (+593)</option>
+          <option value="507" data-digits="8">🇵🇦 Panamá (+507)</option>
+          <option value="1809" data-digits="7">🇩🇴 Rep. Dominicana (+1809)</option>
+          <option value="502" data-digits="8">🇬🇹 Guatemala (+502)</option>
+          <option value="503" data-digits="8">🇸🇻 El Salvador (+503)</option>
+          <option value="504" data-digits="8">🇭🇳 Honduras (+504)</option>
+          <option value="506" data-digits="8">🇨🇷 Costa Rica (+506)</option>
+          <option value="591" data-digits="8">🇧🇴 Bolivia (+591)</option>
+          <option value="595" data-digits="9">🇵🇾 Paraguay (+595)</option>
+          <option value="598" data-digits="8">🇺🇾 Uruguay (+598)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="buyer-phone">Número de teléfono (WhatsApp)</label>
+        <div class="phone-input-wrap">
+          <span class="phone-prefix" id="phone-prefix">+1</span>
+          <input 
+            type="tel" 
+            id="buyer-phone" 
+            placeholder="305 123 4567" 
+            maxlength="16"
+            inputmode="numeric"
+            required 
+            autocomplete="tel"
+          >
+        </div>
+        <small id="phone-help" class="muted" style="font-size:11px; margin-top:2px;">
+          Selecciona tu país y escribe tu número sin el código de país.
+        </small>
+      </div>
+
+      <button type="submit" class="primary-button" style="margin-top: 14px;">
+        Apartar números y enviar por WhatsApp ↗
+      </button>
+
+      <p class="micro-note">
+        Tus números pasarán a estado <strong>Apartado (amarillo)</strong> inmediatamente en el tablero público.
+      </p>
+    </form>
+  </dialog>
+
+</body>
+</html>
