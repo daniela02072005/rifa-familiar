@@ -25,7 +25,8 @@ body {
   font-family: 'DM Sans', Arial, sans-serif;
   line-height: 1.5;
 }
-button, input { font: inherit; }
+button, input, select { font: inherit; }
+.hidden { display: none !important; }
 
 /* HEADER */
 .site-header {
@@ -147,7 +148,7 @@ h2 { font-size: clamp(27px, 4vw, 38px); margin-bottom: 7px; }
 }
 .number:hover:not(:disabled) { border-color: var(--gold); transform: translateY(-1px); }
 
-/* ESTADO SELECCIONADO POR EL USUARIO */
+/* SELECCIONADO POR EL USUARIO */
 .number.selected {
   background: var(--gold);
   color: #18140d;
@@ -155,21 +156,17 @@ h2 { font-size: clamp(27px, 4vw, 38px); margin-bottom: 7px; }
   font-weight: 700;
 }
 
-/* NUEVO: ESTADO AMARILLO (APARTADO / EN REVISIÓN / EN PLAZO) */
+/* APARTADO / EN REVISIÓN / A PLAZOS (AMARILLO) */
 .number.pending {
   background: #2a220a;
   border: 1px solid var(--amber);
   color: var(--amber);
   font-weight: 700;
   cursor: not-allowed;
-  position: relative;
 }
-.number.pending:hover {
-  transform: none;
-  border-color: var(--amber);
-}
+.number.pending:hover { transform: none; border-color: var(--amber); }
 
-/* ESTADO VENDIDO DEFINITIVO */
+/* VENDIDO DEFINITIVO */
 .number.sold {
   background: var(--sold);
   border-color: var(--sold);
@@ -178,7 +175,7 @@ h2 { font-size: clamp(27px, 4vw, 38px); margin-bottom: 7px; }
   cursor: not-allowed;
 }
 
-.number:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--gold-light); outline-offset: 2px; }
+.number:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--gold-light); outline-offset: 2px; }
 .empty-search { color: var(--muted); text-align: center; padding: 30px 0; font-size: 13px; }
 
 /* RESUMEN Y BOTÓN CONTINUAR */
@@ -199,6 +196,104 @@ h2 { font-size: clamp(27px, 4vw, 38px); margin-bottom: 7px; }
 .summary-preview { color: var(--muted); font-size: 11px; margin-bottom: 0; max-width: 650px; overflow-wrap: anywhere; }
 .summary-total { text-align: right; flex-shrink: 0; }
 .total-value { font-family: 'Playfair Display', Georgia, serif; font-size: 30px; color: var(--gold-light); margin: 0; }
+
+/* PRECIO NORMAL TACHADO + PRECIO FINAL DE LA PROMO */
+.price-original {
+  display: block;
+  font-family: 'DM Sans', Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #77736c;
+  text-decoration: line-through;
+  text-decoration-thickness: 1.5px;
+  text-decoration-color: rgba(224, 122, 122, .85);
+  line-height: 1.2;
+  margin-bottom: 1px;
+}
+.price-final {
+  display: block;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 34px;
+  font-weight: 500;
+  color: var(--gold-light);
+  line-height: 1.1;
+  animation: price-pop .28s ease-out;
+}
+.price-final small { font-family: 'DM Sans', Arial, sans-serif; font-size: 11px; letter-spacing: .1em; }
+
+@keyframes price-pop {
+  0%   { transform: scale(.92); opacity: .4; }
+  60%  { transform: scale(1.04); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.saving-tag {
+  display: inline-block;
+  margin-top: 5px;
+  padding: 2px 8px;
+  background: rgba(145, 180, 155, .14);
+  border: 1px solid rgba(145, 180, 155, .35);
+  border-radius: 99px;
+  font-family: 'DM Sans', Arial, sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  color: var(--green);
+  text-transform: uppercase;
+}
+
+/* AVISO DEL PRÓXIMO ESCALÓN */
+.tier-hint {
+  margin: 12px 0 0;
+  padding: 10px 14px;
+  background: var(--amber-bg);
+  border: 1px solid rgba(234, 179, 8, 0.35);
+  border-radius: 9px;
+  color: var(--amber);
+  font-size: 12px;
+  text-align: center;
+}
+
+/* PROMOCIONES POR CANTIDAD */
+.promo-strip {
+  margin-top: 16px;
+  padding: 20px 22px;
+  background: #141412;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.promo-title {
+  margin: 0 0 14px;
+  color: var(--gold);
+  font-size: 10px;
+  letter-spacing: .2em;
+  font-weight: 700;
+  text-align: center;
+}
+.promo-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.promo-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 14px 10px;
+  background: #1b1b1b;
+  border: 1px solid #37342e;
+  border-radius: 10px;
+  text-align: center;
+}
+.promo-card-best {
+  border-color: var(--gold);
+  background: radial-gradient(circle at 50% 0%, rgba(215, 181, 109, .12), transparent 70%), #1b1b1b;
+}
+.promo-qty { font-size: 10px; letter-spacing: .12em; color: var(--muted); text-transform: uppercase; }
+.promo-price { font-family: 'Playfair Display', Georgia, serif; font-size: 24px; color: var(--gold-light); font-weight: 500; }
+.promo-save { font-size: 10px; color: var(--green); font-weight: 700; letter-spacing: .06em; }
+.promo-note { margin: 14px 0 0; font-size: 10px; color: #77736c; text-align: center; }
 
 .primary-button {
   display: flex;
@@ -263,16 +358,24 @@ h2 { font-size: clamp(27px, 4vw, 38px); margin-bottom: 7px; }
   gap: 6px;
   font-size: 12px;
 }
-.checkout-summary-box .row { display: flex; justify-content: space-between; align-items: center; }
-.gold-text { color: var(--gold-light); font-size: 15px; font-weight: 700; }
+.checkout-summary-box .row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.gold-text { color: var(--gold-light); font-size: 15px; font-weight: 700; text-align: right; }
 
 .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; text-align: left; }
 .form-group label { font-size: 10px; font-weight: 700; letter-spacing: 0.12em; color: var(--muted); text-transform: uppercase; }
-.form-group input { padding: 11px 13px; background: #111; border: 1px solid var(--line); border-radius: 8px; color: var(--text); font-size: 13px; }
-.form-group input:focus { outline: 2px solid var(--gold); border-color: var(--gold); }
+.form-group input, .form-group select {
+  padding: 11px 13px;
+  background: #111;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 13px;
+}
+.form-group select { cursor: pointer; }
+.form-group input:focus, .form-group select:focus { outline: 2px solid var(--gold); border-color: var(--gold); }
 .micro-note { font-size: 11px; color: var(--muted); margin-top: 10px; text-align: center; }
 
-/* PREFIJO +1 FIJO EN EL CAMPO DE TELÉFONO */
+/* PREFIJO DE PAÍS FIJO EN EL CAMPO DE TELÉFONO */
 .phone-input-wrap {
   display: flex;
   align-items: center;
@@ -317,6 +420,8 @@ h2 { font-size: clamp(27px, 4vw, 38px); margin-bottom: 7px; }
   .selection-summary { padding: 18px 16px; }
   .summary-preview { max-width: 230px; }
   .total-value { font-size: 25px; }
+  .promo-cards { grid-template-columns: 1fr; gap: 8px; }
+  .promo-card { flex-direction: row; justify-content: space-between; padding: 11px 14px; }
   .how-it-works { padding: 43px 20px; }
   .steps { grid-template-columns: 1fr; gap: 20px; }
   .step { padding-top: 13px; }
