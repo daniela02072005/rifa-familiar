@@ -197,32 +197,28 @@ h2 { font-size: clamp(27px, 4vw, 38px); margin-bottom: 7px; }
 .summary-total { text-align: right; flex-shrink: 0; }
 .total-value { font-family: 'Playfair Display', Georgia, serif; font-size: 30px; color: var(--gold-light); margin: 0; }
 
-/* PRECIO NORMAL TACHADO + PRECIO FINAL DE LA PROMO */
+/* PRECIO NORMAL TACHADO (línea propia, encima del precio final) */
 .price-original {
   display: block;
+  margin: 0 0 1px;
   font-family: 'DM Sans', Arial, sans-serif;
   font-size: 14px;
   font-weight: 500;
-  color: #77736c;
+  color: #8a857c;
   text-decoration: line-through;
   text-decoration-thickness: 1.5px;
-  text-decoration-color: rgba(224, 122, 122, .85);
-  line-height: 1.2;
-  margin-bottom: 1px;
+  text-decoration-color: rgba(224, 122, 122, .9);
+  line-height: 1.25;
 }
-.price-final {
-  display: block;
-  font-family: 'Playfair Display', Georgia, serif;
+
+/* Precio final de la promoción, con un pequeño destello al aparecer */
+.total-value.promo-active {
   font-size: 34px;
-  font-weight: 500;
-  color: var(--gold-light);
-  line-height: 1.1;
-  animation: price-pop .28s ease-out;
+  animation: price-pop .3s ease-out;
 }
-.price-final small { font-family: 'DM Sans', Arial, sans-serif; font-size: 11px; letter-spacing: .1em; }
 
 @keyframes price-pop {
-  0%   { transform: scale(.92); opacity: .4; }
+  0%   { transform: scale(.93); opacity: .45; }
   60%  { transform: scale(1.04); }
   100% { transform: scale(1); opacity: 1; }
 }

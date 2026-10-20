@@ -3,7 +3,7 @@ const TOTAL_NUMBERS = 1000; // Numeración del 000 al 999
 
 // Número de WhatsApp de la ADMINISTRACIÓN (formato internacional sin '+' ni símbolos)
 // Ejemplo EE. UU. (305) 123-4567 -> "13051234567"
-const ADMIN_WHATSAPP_PHONE = "17328019161";
+const ADMIN_WHATSAPP_PHONE = "13050000000";
 
 const STORAGE_KEYS = {
   SOLD_NUMBERS: "rifa_sold_v3",
@@ -244,15 +244,33 @@ function updateSummary() {
   countOutput.textContent = `${count} ${count === 1 ? "número seleccionado" : "números seleccionados"}`;
   previewOutput.textContent = count ? numbers.map(formatNumber).join(", ") : "Todavía no has elegido números.";
 
-  // Mostrar el total; si hay promo, el precio normal tachado y el rebajado destacado
+  // Total: si hay promo, el precio normal tachado arriba y el rebajado en grande debajo
+  const originalOutput = document.querySelector("#total-original");
+  const savingOutput = document.querySelector("#total-saving");
+
   if (saving > 0) {
     const original = count * PRICE_PER_NUMBER;
-    totalOutput.innerHTML =
-      `<span class="price-original">$${original.toLocaleString("en-US")}</span>` +
-      `<span class="price-final">$${total.toLocaleString("en-US")} <small>USD</small></span>` +
-      `<span class="saving-tag">Ahorras $${saving}</span>`;
-  } else {
+    if (originalOutput) {
+      originalOutput.textContent = `$${original.toLocaleString("en-US")}`;
+      originalOutput.classList.remove("hidden");
+    }
     totalOutput.innerHTML = `$${total.toLocaleString("en-US")} <small>USD</small>`;
+    totalOutput.classList.add("promo-active");
+    if (savingOutput) {
+      savingOutput.textContent = `Ahorras $${saving}`;
+      savingOutput.classList.remove("hidden");
+    }
+  } else {
+    if (originalOutput) {
+      originalOutput.textContent = "";
+      originalOutput.classList.add("hidden");
+    }
+    totalOutput.innerHTML = `$${total.toLocaleString("en-US")} <small>USD</small>`;
+    totalOutput.classList.remove("promo-active");
+    if (savingOutput) {
+      savingOutput.textContent = "";
+      savingOutput.classList.add("hidden");
+    }
   }
 
   // Aviso del próximo escalón de descuento

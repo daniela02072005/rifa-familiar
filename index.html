@@ -70,8 +70,37 @@
         </div>
         <div class="summary-total">
           <p class="summary-label">TOTAL</p>
+          <p id="total-original" class="price-original hidden"></p>
           <p id="selection-total" class="total-value">$0 <small>USD</small></p>
+          <span id="total-saving" class="saving-tag hidden"></span>
         </div>
+      </div>
+
+      <p id="tier-hint" class="tier-hint hidden"></p>
+
+      <!-- PROMOCIONES POR CANTIDAD -->
+      <div class="promo-strip">
+        <p class="promo-title">PROMOCIONES POR CANTIDAD</p>
+        <div class="promo-cards">
+          <div class="promo-card">
+            <span class="promo-qty">5 boletas</span>
+            <strong class="promo-price">$130</strong>
+            <span class="promo-save">Ahorras $20</span>
+          </div>
+          <div class="promo-card">
+            <span class="promo-qty">10 boletas</span>
+            <strong class="promo-price">$250</strong>
+            <span class="promo-save">Ahorras $50</span>
+          </div>
+          <div class="promo-card promo-card-best">
+            <span class="promo-qty">50 boletas</span>
+            <strong class="promo-price">$1200</strong>
+            <span class="promo-save">Ahorras $300</span>
+          </div>
+        </div>
+        <p class="promo-note">
+          El descuento se aplica cuando seleccionas exactamente esa cantidad. Otras cantidades se calculan a $30 por boleta.
+        </p>
       </div>
 
       <button id="whatsapp-button" class="primary-button" type="button" disabled>
