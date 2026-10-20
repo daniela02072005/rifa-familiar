@@ -3,7 +3,7 @@ const TOTAL_NUMBERS = 1000; // Numeración del 000 al 999
 
 // Número de WhatsApp de la ADMINISTRACIÓN (formato internacional sin '+' ni símbolos)
 // Ejemplo EE. UU. (305) 123-4567 -> "13051234567"
-const ADMIN_WHATSAPP_PHONE = "1732819161";
+const ADMIN_WHATSAPP_PHONE = "17328019161";
 
 const STORAGE_KEYS = {
   SOLD_NUMBERS: "rifa_sold_v3",
@@ -200,14 +200,74 @@ function toggleNumber(number) {
   updateSummary();
 }
 
+// ---------- PRECIOS CON DESCUENTO POR CANTIDAD ----------
+// El descuento se aplica SOLO cuando la cantidad coincide exactamente con el escalón.
+const PROMO_PRICES = {
+  5: 130,
+  10: 250,
+  50: 1200
+};
+
+// Escalones ordenados para mostrar avisos y sugerencias
+const PROMO_TIERS = [
+  { qty: 5, total: 130 },
+  { qty: 10, total: 250 },
+  { qty: 50, total: 1200 }
+];
+
+// Precio total según la cantidad de boletas elegidas
+function getTotalPrice(count) {
+  if (PROMO_PRICES[count] !== undefined) return PROMO_PRICES[count];
+  return count * PRICE_PER_NUMBER;
+}
+
+// Ahorro conseguido frente al precio normal ($30 por boleta)
+function getSaving(count) {
+  return count * PRICE_PER_NUMBER - getTotalPrice(count);
+}
+
+// Devuelve el próximo escalón de descuento que aún no se ha alcanzado
+function getNextTier(count) {
+  if (count >= 50) return null;
+  if (count >= 10) return { qty: 50, total: 1200 };
+  if (count > 5) return { qty: 10, total: 250 };
+  if (count >= 5) return { qty: 10, total: 250 };
+  return { qty: 5, total: 130 };
+}
+
 function updateSummary() {
   const numbers = [...selectedNumbers].sort((a, b) => a - b);
   const count = numbers.length;
-  const total = count * PRICE_PER_NUMBER;
+  const total = getTotalPrice(count);
+  const saving = getSaving(count);
 
   countOutput.textContent = `${count} ${count === 1 ? "número seleccionado" : "números seleccionados"}`;
   previewOutput.textContent = count ? numbers.map(formatNumber).join(", ") : "Todavía no has elegido números.";
-  totalOutput.innerHTML = `$${total.toLocaleString("en-US")} <small>USD</small>`;
+
+  // Mostrar el total; si hay promo, el precio normal tachado y el rebajado destacado
+  if (saving > 0) {
+    const original = count * PRICE_PER_NUMBER;
+    totalOutput.innerHTML =
+      `<span class="price-original">$${original.toLocaleString("en-US")}</span>` +
+      `<span class="price-final">$${total.toLocaleString("en-US")} <small>USD</small></span>` +
+      `<span class="saving-tag">Ahorras $${saving}</span>`;
+  } else {
+    totalOutput.innerHTML = `$${total.toLocaleString("en-US")} <small>USD</small>`;
+  }
+
+  // Aviso del próximo escalón de descuento
+  const tierHint = document.querySelector("#tier-hint");
+  if (tierHint) {
+    const next = count > 0 ? getNextTier(count) : { qty: 5, total: 130 };
+    if (next) {
+      const faltan = next.qty - count;
+      tierHint.textContent = `Con ${next.qty} boletas pagarías $${next.total} USD. Te ${faltan === 1 ? "falta 1 boleta" : `faltan ${faltan} boletas`}.`;
+      tierHint.classList.remove("hidden");
+    } else {
+      tierHint.classList.add("hidden");
+    }
+  }
+
   whatsappButton.disabled = count === 0;
 }
 
@@ -216,10 +276,14 @@ function updateSummary() {
 whatsappButton.addEventListener("click", () => {
   if (selectedNumbers.size === 0) return;
   const numbers = [...selectedNumbers].sort((a, b) => a - b);
-  const total = numbers.length * PRICE_PER_NUMBER;
+  const count = numbers.length;
+  const total = getTotalPrice(count);
+  const saving = getSaving(count);
 
   modalTicketsPreview.textContent = numbers.map(formatNumber).join(", ");
-  modalTotalPreview.textContent = `$${total} USD (${numbers.length} boletas)`;
+  modalTotalPreview.textContent = saving > 0
+    ? `$${total} USD (${count} boletas · ahorras $${saving})`
+    : `$${total} USD (${count} boletas)`;
   checkoutDialog.showModal();
 });
 
@@ -245,7 +309,9 @@ checkoutForm.addEventListener("submit", (e) => {
   const displayPhone = formatPhoneDisplay(countryCode, localDigits);
 
   const numbers = [...selectedNumbers].sort((a, b) => a - b);
-  const total = numbers.length * PRICE_PER_NUMBER;
+  const count = numbers.length;
+  const total = getTotalPrice(count);
+  const saving = getSaving(count);
 
   const rawRequests = localStorage.getItem(STORAGE_KEYS.REQUESTS);
   const requests = rawRequests ? JSON.parse(rawRequests) : [];
@@ -289,7 +355,7 @@ checkoutForm.addEventListener("submit", (e) => {
     `👤 *Nombre:* ${buyerName}\n` +
     `📱 *Teléfono:* ${displayPhone}\n` +
     `🎟 *Números apartados:* ${formattedNumbers}\n` +
-    `💵 *Total:* $${total} USD\n\n` +
+    `💵 *Total:* $${total} USD${saving > 0 ? ` _(promo aplicada, ahorro de $${saving})_` : ''}\n\n` +
     `Te adjunto por aquí mi comprobante de pago o conversemos para organizar mi abono a plazos. ¡Gracias!`;
 
   const waUrl = `https://wa.me/${ADMIN_WHATSAPP_PHONE}?text=${encodeURIComponent(message)}`;
