@@ -1,9 +1,9 @@
 const PRICE_PER_NUMBER = 30;
-const TOTAL_NUMBERS = 1000;
+const TOTAL_NUMBERS = 1000; // Numeración del 000 al 999
 
 // Número de WhatsApp de la ADMINISTRACIÓN (formato internacional sin '+' ni símbolos)
 // Ejemplo EE. UU. (305) 123-4567 -> "13051234567"
-const ADMIN_WHATSAPP_PHONE = "17328019161";
+const ADMIN_WHATSAPP_PHONE = "13050000000";
 
 const STORAGE_KEYS = {
   SOLD_NUMBERS: "rifa_sold_v3",
@@ -143,7 +143,7 @@ function renderNumbers(filter = "") {
   buttonsByNumber.clear();
   let visibleCount = 0;
 
-  for (let number = 1; number <= TOTAL_NUMBERS; number++) {
+  for (let number = 0; number < TOTAL_NUMBERS; number++) {
     const formatted = formatNumber(number);
     if (normalizedFilter && !formatted.includes(normalizedFilter)) continue;
     visibleCount++;
