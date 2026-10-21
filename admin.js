@@ -35,6 +35,26 @@ document.addEventListener("DOMContentLoaded", () => {
   const closeDialogBtn = document.querySelector("#close-dialog");
   const toast = document.querySelector("#toast");
 
+  // Formato y limpieza de teléfono de EE.UU.
+  function getUSCleanDigits(phoneStr) {
+    const digits = (phoneStr || "").replace(/\D/g, "");
+    if (digits.length === 10) return `1${digits}`;
+    if (digits.length === 11 && digits.startsWith("1")) return digits;
+    return digits;
+  }
+
+  function formatUSDisplay(phoneStr) {
+    const digits = (phoneStr || "").replace(/\D/g, "");
+    if (digits.length === 10) {
+      return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+    }
+    if (digits.length === 11 && digits.startsWith("1")) {
+      const d = digits.slice(1);
+      return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}`;
+    }
+    return phoneStr;
+  }
+
   // 1. GESTIÓN DE ACCESO
   loginForm.addEventListener("submit", (e) => {
     e.preventDefault();
@@ -78,44 +98,12 @@ document.addEventListener("DOMContentLoaded", () => {
     localStorage.setItem(STORAGE_KEYS.REQUESTS, JSON.stringify(requests));
   }
 
-  // Datos de ejemplo iniciales (1 solicitud en revisión y 1 solicitud a plazos de demostración)
+  // No se crean solicitudes de ejemplo: el panel arranca completamente vacío.
+  // Todos los números quedan disponibles hasta que llegue una reserva real desde la web.
   function initInitialData() {
-    let { soldSet, pendingSet, requests } = getStoredData();
-
-    if (requests.length === 0) {
-      requests = [
-        {
-          id: "SOL-0001",
-          buyer: "Carlos Mendoza",
-          phone: "+34 600 111 222",
-          method: "Transferencia bancaria",
-          numbers: [42, 118],
-          amount: 60,
-          paidAmount: 0,
-          remainingAmount: 60,
-          status: "pending", // En amarillo
-          notes: "Esperando comprobante de transferencia",
-          createdAt: new Date().toLocaleDateString("es-ES")
-        },
-        {
-          id: "SOL-0002",
-          buyer: "Mariana Silva",
-          phone: "+34 600 333 444",
-          method: "Abono / A plazos",
-          numbers: [7, 8, 9, 10],
-          amount: 120,
-          paidAmount: 60, // Abono el 50%
-          remainingAmount: 60,
-          status: "partial", // A plazos (en amarillo en la web)
-          notes: "Abonó $60 USD. Saldo pendiente a pagar el día 30.",
-          createdAt: new Date().toLocaleDateString("es-ES")
-        }
-      ];
-
-      // Apartamos esos números en amarillo (pendingSet)
-      [42, 118, 7, 8, 9, 10].forEach(n => pendingSet.add(n));
-      saveStoredData(soldSet, pendingSet, requests);
-    }
+    const { soldSet, pendingSet, requests } = getStoredData();
+    // Solo nos aseguramos de que las claves existan en el almacenamiento.
+    saveStoredData(soldSet, pendingSet, requests);
   }
 
   // 3. RENDERIZADO DE TABLA Y MÉTRICAS
@@ -170,7 +158,7 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
       emptyState.classList.add("hidden");
       filtered.forEach(req => {
-        const cleanPhone = req.phone.replace(/\D/g, "");
+        const waPhone = getUSCleanDigits(req.phone);
         const tr = document.createElement("tr");
 
         let statusText = "En revisión";
@@ -184,8 +172,8 @@ document.addEventListener("DOMContentLoaded", () => {
           <td>
             <strong>${req.buyer}</strong><br>
             <small class="muted">${req.id}</small> · 
-            <a href="https://wa.me/${cleanPhone}" target="_blank" style="color:var(--green); text-decoration:none; font-size:11px;">
-              💬 WhatsApp
+            <a href="https://wa.me/${waPhone}" target="_blank" style="color:var(--green); text-decoration:none; font-size:11px;">
+              💬 WhatsApp (${formatUSDisplay(req.phone)})
             </a>
           </td>
           <td>
@@ -225,10 +213,12 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!req) return;
 
     const formattedNumbers = req.numbers.map(n => String(n).padStart(3, "0"));
-    const cleanPhone = req.phone.replace(/\D/g, "");
+    const waPhone = getUSCleanDigits(req.phone);
+    const displayPhone = formatUSDisplay(req.phone);
+    const currentRemaining = req.remainingAmount !== undefined ? req.remainingAmount : req.amount;
 
     let statusTitle = "En revisión (Apartado en amarillo)";
-    if (req.status === "partial") statusTitle = "Acuerdo a plazos / Abono activo";
+    if (req.status === "partial") statusTitle = "Acuerdo a plazos / Abono activo (Amarillo)";
     if (req.status === "approved") statusTitle = "Pagado 100% / Vendido definitivo";
     if (req.status === "rejected") statusTitle = "Solicitud rechazada (Números liberados)";
 
@@ -241,16 +231,16 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
           <div class="flow-metrics">
             <div class="metric-card">
-              <span class="metric-label">Total esperado</span>
+              <span class="metric-label">Total boletas</span>
               <strong>$${req.amount} USD</strong>
             </div>
             <div class="metric-card">
-              <span class="metric-label">Abonado</span>
+              <span class="metric-label">Abonado hasta hoy</span>
               <strong style="color:var(--green);">$${req.paidAmount || 0} USD</strong>
             </div>
             <div class="metric-card">
-              <span class="metric-label">Saldo restante</span>
-              <strong style="color:var(--amber);">$${req.remainingAmount !== undefined ? req.remainingAmount : req.amount} USD</strong>
+              <span class="metric-label">Saldo pendiente</span>
+              <strong style="color:var(--amber);">$${currentRemaining} USD</strong>
             </div>
           </div>
         </header>
@@ -260,16 +250,16 @@ document.addEventListener("DOMContentLoaded", () => {
           <p class="eyebrow">DATOS DEL COMPRADOR</p>
           <div style="display:flex; justify-content:space-between; align-items:center;">
             <div>
-              <p style="margin: 0 0 4px;"><strong>${req.buyer}</strong> (${req.phone})</p>
+              <p style="margin: 0 0 4px;"><strong>${req.buyer}</strong> (${displayPhone})</p>
               <p class="muted" style="margin: 0;">Método: ${req.method}</p>
             </div>
-            <a href="https://wa.me/${cleanPhone}" target="_blank" class="button button-small button-outline" style="color:var(--green);">
-              💬 Abrir chat WhatsApp
+            <a href="https://wa.me/${waPhone}" target="_blank" class="button button-small button-outline" style="color:var(--green);">
+              💬 Abrir WhatsApp (${displayPhone})
             </a>
           </div>
 
           <div style="margin-top: 10px;">
-            <span class="muted" style="font-size:11px;">Números apartados (${req.numbers.length} boletas):</span>
+            <span class="muted" style="font-size:11px;">Boletas apartadas (${req.numbers.length}):</span>
             <div class="ticket-pills" style="margin-top: 4px;">
               ${formattedNumbers.map(n => `<span class="ticket-pill pending-pill">${n}</span>`).join("")}
             </div>
@@ -277,19 +267,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
           ${req.notes ? `
             <div style="margin-top: 10px; background:#111; padding: 8px 12px; border-radius: 6px; font-size:12px; border:1px solid var(--line);">
-              <strong>Nota interna:</strong> ${req.notes}
+              <strong>Historial de notas / acuerdos:</strong><br>
+              <span style="color:#ddd;">${req.notes}</span>
             </div>
           ` : ''}
         </section>
 
         ${req.status !== "approved" && req.status !== "rejected" ? `
-          <!-- VERIFICACIÓN Y OPCIONES -->
+          <!-- VERIFICACIÓN BANCARIA PREVIA -->
           <section class="step-card">
-            <p class="eyebrow">VERIFICACIÓN BANCARIA PREVIA</p>
+            <p class="eyebrow">VERIFICACIÓN PREVIA</p>
             <div class="checklist">
               <label>
                 <input type="checkbox" id="check-bank-account">
-                <span>He comprobado el movimiento bancario en la cuenta receptora.</span>
+                <span>He verificado el ingreso real (Zelle / banco / efectivo) antes de registrar el movimiento.</span>
               </label>
             </div>
           </section>
@@ -298,40 +289,40 @@ document.addEventListener("DOMContentLoaded", () => {
           <section class="step-card" style="border-color: rgba(96, 165, 250, 0.4);">
             <div style="display:flex; justify-content:space-between; align-items:center;">
               <div>
-                <p class="eyebrow" style="color:var(--blue);">MODALIDAD A PLAZOS</p>
+                <p class="eyebrow" style="color:var(--blue);">PLAN A PLAZOS</p>
                 <h3 style="color:var(--blue); margin:0;">Registrar Abono Parcial</h3>
               </div>
-              <span class="muted" style="font-size:11px;">Mantiene los números en amarillo</span>
+              <span class="muted" style="font-size:11px;">Mantiene las boletas en amarillo</span>
             </div>
 
             <div class="installment-box">
               <div class="field-row">
                 <div>
-                  <label for="installment-paid">Monto que abona ahora ($ USD)</label>
-                  <input type="number" id="installment-paid" min="1" max="${req.remainingAmount || req.amount}" placeholder="Ej. 30" value="${req.paidAmount > 0 ? '' : '30'}">
+                  <label for="installment-paid">Monto que abona en este pago ($ USD)</label>
+                  <input type="number" id="installment-paid" min="1" max="${currentRemaining}" placeholder="Ej. 30" value="${Math.min(30, currentRemaining)}">
                 </div>
                 <div>
-                  <label>Nuevo saldo pendiente</label>
-                  <input type="text" id="calc-remaining" readonly style="color:var(--amber); font-weight:bold;" value="$${(req.remainingAmount || req.amount) - (req.paidAmount > 0 ? 0 : 30)} USD">
+                  <label>Nuevo saldo por cobrar</label>
+                  <input type="text" id="calc-remaining" readonly style="color:var(--amber); font-weight:bold;" value="$${Math.max(0, currentRemaining - Math.min(30, currentRemaining))} USD">
                 </div>
               </div>
               <div>
-                <label for="installment-notes">Nota de acuerdo o fecha del próximo pago</label>
-                <textarea id="installment-notes" rows="2" placeholder="Ej. Pagó $30 hoy por transferencia. Restan $30 que abonará el día 15.">${req.notes || ''}</textarea>
+                <label for="installment-notes">Acuerdo o fecha límite para el siguiente abono</label>
+                <textarea id="installment-notes" rows="2" placeholder="Ej. Abonó $30 hoy por Zelle. Acuerda liquidar los $30 restantes el viernes."></textarea>
               </div>
 
-              <button type="button" id="btn-save-installment" class="button button-blue full-width" style="margin-top:10px;">
-                💾 Guardar Abono y Notificar por WhatsApp
+              <button type="button" id="btn-save-installment" class="button button-blue full-width" style="margin-top:10px;" disabled>
+                💾 Registrar Abono y Enviar Recibo por WhatsApp
               </button>
             </div>
           </section>
 
-          <!-- OPCIÓN A: CONFIRMAR PAGO COMPLETO Y VENDER DEFINITIVAMENTE -->
+          <!-- OPCIÓN A: LIQUIDAR PAGO COMPLETO Y VENDER DEFINITIVAMENTE -->
           <section class="step-card" style="border-color: rgba(215, 181, 109, 0.4);">
-            <p class="eyebrow">PAGO TOTAL LIQUIDADO</p>
-            <h3>Confirmar venta completa (100% Pagado)</h3>
+            <p class="eyebrow">LIQUIDACIÓN TOTAL (100% PAGADO)</p>
+            <h3>${req.paidAmount > 0 ? `Liquidar Saldo Restante ($${currentRemaining} USD)` : `Confirmar Pago Total ($${req.amount} USD)`}</h3>
             <p class="muted" style="margin-bottom: 12px;">
-              Los números pasarán de amarillo a <strong>Vendido definitivo (gris tachado)</strong> y se emitirá el boleto oficial.
+              Los números pasarán de amarillo a <strong>Vendido definitivo (gris tachado)</strong> y se generará la confirmación oficial.
             </p>
 
             <div class="modal-actions">
@@ -340,16 +331,16 @@ document.addEventListener("DOMContentLoaded", () => {
               </button>
 
               <button type="button" id="btn-modal-confirm-full" class="button button-gold" disabled>
-                Confirmar Pago Completo ($${req.amount} USD)
+                ${req.paidAmount > 0 ? `Liquidar $${currentRemaining} USD y Cerrar Venta` : `Confirmar Pago Total ($${req.amount} USD)`}
               </button>
             </div>
           </section>
         ` : `
           <!-- SOLICITUD YA CERRADA -->
           <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
-            <span class="muted">Esta solicitud ya está cerrada como <strong>${req.status.toUpperCase()}</strong>.</span>
+            <span class="muted">Esta solicitud está cerrada como <strong>${req.status.toUpperCase()}</strong>.</span>
             <button type="button" id="btn-reopen" class="button button-outline">
-              Reabrir y pasar a En revisión (Amarillo)
+              Reabrir a En revisión (Amarillo)
             </button>
           </div>
         `}
@@ -357,7 +348,7 @@ document.addEventListener("DOMContentLoaded", () => {
       </div>
     `;
 
-    // Interacción interactiva si está pendiente o parcial
+    // Lógica interactiva cuando la solicitud está activa
     if (req.status !== "approved" && req.status !== "rejected") {
       const checkBank = detailsContent.querySelector("#check-bank-account");
       const btnConfirmFull = detailsContent.querySelector("#btn-modal-confirm-full");
@@ -367,24 +358,24 @@ document.addEventListener("DOMContentLoaded", () => {
       const calcRemaining = detailsContent.querySelector("#calc-remaining");
       const inputNotes = detailsContent.querySelector("#installment-notes");
 
-      // Validar botón de pago completo
+      // La casilla de verificación habilita ambos botones de cobro
       checkBank.addEventListener("change", () => {
         btnConfirmFull.disabled = !checkBank.checked;
+        btnSaveInstallment.disabled = !checkBank.checked;
       });
 
-      // Cálculo interactivo del saldo restante
-      const currentRemaining = req.remainingAmount !== undefined ? req.remainingAmount : req.amount;
+      // Cálculo en tiempo real del saldo restante al cambiar el input de abono
       inputPaid.addEventListener("input", () => {
         const val = parseFloat(inputPaid.value) || 0;
         const newRem = Math.max(0, currentRemaining - val);
         calcRemaining.value = `$${newRem} USD`;
       });
 
-      // ACCIÓN 1: PAGO COMPLETO
+      // ACCIÓN 1: LIQUIDAR PAGO COMPLETO (Vendido definitivo)
       btnConfirmFull.addEventListener("click", () => {
         const { soldSet, pendingSet, requests: curReqs } = getStoredData();
 
-        // Mover números de amarillo (pending) a vendido (sold)
+        // Mover números de amarillo (pending) a vendido definitivo (sold)
         req.numbers.forEach(n => {
           pendingSet.delete(n);
           soldSet.add(n);
@@ -401,10 +392,10 @@ document.addEventListener("DOMContentLoaded", () => {
         saveStoredData(soldSet, pendingSet, curReqs);
         renderAll();
 
-        // Mostrar pantalla de felicitación y entrega de boleto por WhatsApp
+        // Mensaje oficial redactado con formato US
         const waMsg = encodeURIComponent(
           `🎉 *¡PAGO CONFIRMADO - RIFA DEL VEHÍCULO!* 🎉\n\n` +
-          `Hola *${req.buyer}*, tu pago de *$${req.amount} USD* correspondiente a la solicitud *#${req.id}* ha sido verificado con éxito.\n\n` +
+          `Hola *${req.buyer}*, tu pago total de *$${req.amount} USD* correspondiente a la solicitud *#${req.id}* ha sido verificado con éxito.\n\n` +
           `🎟 *Tus números oficiales son:* ${formattedNumbers.join(", ")}\n\n` +
           `¡Ya estás participando formalmente en el sorteo! Te deseamos muchísima suerte.`
         );
@@ -412,13 +403,13 @@ document.addEventListener("DOMContentLoaded", () => {
         detailsContent.innerHTML = `
           <div style="text-align: center; padding: 20px 10px;">
             <span style="font-size: 42px;">🏆</span>
-            <h2 style="color: var(--gold); margin: 10px 0;">¡Venta Completada con Éxito!</h2>
+            <h2 style="color: var(--gold); margin: 10px 0;">¡Venta Completada y Cerrada!</h2>
             <p class="muted">
-              Los números <strong>${formattedNumbers.join(", ")}</strong> quedaron marcados como vendidos definitivamente.
+              Los números <strong>${formattedNumbers.join(", ")}</strong> pasaron a vendidos definitivamente (gris tachado).
             </p>
             <div style="margin: 20px 0; display:flex; flex-direction:column; gap:10px;">
-              <a href="https://wa.me/${cleanPhone}?text=${waMsg}" target="_blank" class="button button-gold full-width" style="text-decoration:none;">
-                💬 Enviar mensaje oficial de felicitación a ${req.buyer}
+              <a href="https://wa.me/${waPhone}?text=${waMsg}" target="_blank" class="button button-gold full-width" style="text-decoration:none;">
+                💬 Enviar felicitación oficial a ${req.buyer} por WhatsApp
               </a>
               <button type="button" class="button button-outline full-width" onclick="document.querySelector('#details-dialog').close()">
                 Cerrar ventana
@@ -427,30 +418,39 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
         `;
 
-        showToast(`Solicitud #${req.id} liquidada y boletas marcadas como vendidas.`);
+        showToast(`Solicitud #${req.id} liquidada al 100%.`);
       });
 
-      // ACCIÓN 2: GUARDAR ABONO / A PLAZOS
+      // ACCIÓN 2: GUARDAR ABONO A PLAZOS
       btnSaveInstallment.addEventListener("click", () => {
         const abonoValor = parseFloat(inputPaid.value) || 0;
         if (abonoValor <= 0) {
-          alert("Por favor introduce un monto de abono válido mayor a 0.");
+          alert("Por favor introduce un monto de abono mayor a $0 USD.");
+          return;
+        }
+        if (abonoValor > currentRemaining) {
+          alert(`El abono ($${abonoValor} USD) no puede superar el saldo pendiente ($${currentRemaining} USD).`);
           return;
         }
 
         const { soldSet, pendingSet, requests: curReqs } = getStoredData();
 
-        // Los números SE MANTIENEN en amarillo (pendingSet) para que nadie los compre
+        // Los números SE MANTIENEN en amarillo (pendingSet)
         req.numbers.forEach(n => pendingSet.add(n));
 
         const target = curReqs.find(r => r.id === req.id);
         if (target) {
           target.paidAmount = (target.paidAmount || 0) + abonoValor;
           target.remainingAmount = Math.max(0, target.amount - target.paidAmount);
-          target.notes = inputNotes.value.trim();
+
+          const notaTexto = inputNotes.value.trim();
+          if (notaTexto) {
+            target.notes = (target.notes ? target.notes + " | " : "") + `Abonó $${abonoValor} USD: ${notaTexto}`;
+          }
+
           target.status = target.remainingAmount === 0 ? "approved" : "partial";
 
-          // Si con este abono completó el total, pasa a vendido
+          // Si con este abono completó el total, se convierte en vendido definitivo automáticamente
           if (target.status === "approved") {
             req.numbers.forEach(n => {
               pendingSet.delete(n);
@@ -469,8 +469,8 @@ document.addEventListener("DOMContentLoaded", () => {
           `🎟 *Boletas apartadas:* ${formattedNumbers.join(", ")}\n` +
           `💵 *Total acumulado abonado:* $${target.paidAmount} USD\n` +
           `⏳ *Saldo pendiente por liquidar:* $${saldoRestante} USD\n\n` +
-          `${inputNotes.value.trim() ? `📌 *Nota:* ${inputNotes.value.trim()}\n\n` : ''}` +
-          `Tus números permanecen debidamente apartados y protegidos a tu nombre. ¡Gracias!`
+          `${inputNotes.value.trim() ? `📌 *Acuerdo:* ${inputNotes.value.trim()}\n\n` : ''}` +
+          `Tus números permanecen apartados y protegidos a tu nombre en la rifa. ¡Gracias!`
         );
 
         detailsContent.innerHTML = `
@@ -478,11 +478,11 @@ document.addEventListener("DOMContentLoaded", () => {
             <span style="font-size: 42px;">📑</span>
             <h2 style="color: var(--blue); margin: 10px 0;">¡Abono registrado con éxito!</h2>
             <p class="muted">
-              Se registró el abono de <strong>$${abonoValor} USD</strong>. Saldo pendiente: <strong>$${saldoRestante} USD</strong>.<br>
-              Los números continúan <strong>apartados en amarillo</strong> para el comprador.
+              Abono: <strong>$${abonoValor} USD</strong>. Saldo pendiente: <strong>$${saldoRestante} USD</strong>.<br>
+              Las boletas continúan <strong>apartadas en amarillo</strong> para el comprador.
             </p>
             <div style="margin: 20px 0; display:flex; flex-direction:column; gap:10px;">
-              <a href="https://wa.me/${cleanPhone}?text=${waMsgAbono}" target="_blank" class="button button-blue full-width" style="text-decoration:none;">
+              <a href="https://wa.me/${waPhone}?text=${waMsgAbono}" target="_blank" class="button button-blue full-width" style="text-decoration:none;">
                 💬 Enviar recibo de abono a ${req.buyer} por WhatsApp
               </a>
               <button type="button" class="button button-outline full-width" onclick="document.querySelector('#details-dialog').close()">
@@ -492,7 +492,7 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
         `;
 
-        showToast(`Abono de $${abonoValor} USD registrado en solicitud #${req.id}.`);
+        showToast(`Abono de $${abonoValor} USD registrado en #${req.id}.`);
       });
 
       // ACCIÓN 3: RECHAZAR Y LIBERAR NÚMEROS
@@ -503,7 +503,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const { soldSet, pendingSet, requests: curReqs } = getStoredData();
 
-        // Liberar números de ambas listas
         req.numbers.forEach(n => {
           pendingSet.delete(n);
           soldSet.delete(n);
@@ -525,7 +524,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const target = curReqs.find(r => r.id === req.id);
 
         if (target) {
-          // Quitar de vendidos y pasar a apartados en amarillo
           req.numbers.forEach(n => {
             soldSet.delete(n);
             pendingSet.add(n);
