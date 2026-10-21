@@ -1,21 +1,21 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const STORAGE_KEYS = {
-    SOLD_NUMBERS: "rifa_sold_v3",
-    PENDING_NUMBERS: "rifa_pending_v3",
-    REQUESTS: "rifa_requests_v3"
-  };
 
-  // Referencias DOM
+  // ============================================================
+  // RIFA FAMILIAR · PANEL DE ADMINISTRACIÓN CONECTADO A SUPABASE
+  // ============================================================
+
+  // ---------- REFERENCIAS DOM ----------
   const loginScreen = document.querySelector("#login-screen");
   const loginForm = document.querySelector("#login-form");
-  const usernameInput = document.querySelector("#username");
+  const emailInput = document.querySelector("#email");
   const passwordInput = document.querySelector("#password");
   const loginError = document.querySelector("#login-error");
 
   const adminPanel = document.querySelector("#admin-panel");
   const logoutButton = document.querySelector("#logout-button");
+  const adminNameEl = document.querySelector("#admin-name");
+  const adminEmailLabel = document.querySelector("#admin-email-label");
 
-  // Métricas
   const soldCountEl = document.querySelector("#sold-count");
   const pendingCountEl = document.querySelector("#pending-count");
   const partialCountEl = document.querySelector("#partial-count");
@@ -23,258 +23,368 @@ document.addEventListener("DOMContentLoaded", () => {
   const debtTotalEl = document.querySelector("#debt-total");
   const requestCounterEl = document.querySelector("#request-counter");
 
-  // Filtros y tabla
   const searchInput = document.querySelector("#search-input");
   const statusFilter = document.querySelector("#status-filter");
   const requestsTable = document.querySelector("#requests-table");
   const emptyState = document.querySelector("#empty-state");
 
-  // Modal y Toast
   const detailsDialog = document.querySelector("#details-dialog");
   const detailsContent = document.querySelector("#details-content");
   const closeDialogBtn = document.querySelector("#close-dialog");
   const toast = document.querySelector("#toast");
 
-  // Formato y limpieza de teléfono de EE.UU.
-  function getUSCleanDigits(phoneStr) {
-    const digits = (phoneStr || "").replace(/\D/g, "");
-    if (digits.length === 10) return `1${digits}`;
-    if (digits.length === 11 && digits.startsWith("1")) return digits;
-    return digits;
+  // ---------- UTILIDADES DE TELÉFONO ----------
+  function cleanDigits(phoneStr) {
+    return (phoneStr || "").replace(/\D/g, "");
   }
 
-  function formatUSDisplay(phoneStr) {
-    const digits = (phoneStr || "").replace(/\D/g, "");
-    if (digits.length === 10) {
-      return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
-    }
-    if (digits.length === 11 && digits.startsWith("1")) {
-      const d = digits.slice(1);
-      return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}`;
-    }
-    return phoneStr;
+  function waLink(phone, message) {
+    const digits = cleanDigits(phone);
+    const base = `https://wa.me/${digits}`;
+    return message ? `${base}?text=${encodeURIComponent(message)}` : base;
   }
 
-  // 1. GESTIÓN DE ACCESO
-  loginForm.addEventListener("submit", (e) => {
+  function money(n) {
+    return `$${Number(n || 0).toLocaleString("en-US")}`;
+  }
+
+  function fmtNum(n) {
+    return String(n).padStart(3, "0");
+  }
+
+  // ---------- ESTADO EN MEMORIA ----------
+  let solicitudes = [];   // filas de la tabla solicitudes
+  let numerosMap = {};    // numero -> estado
+  let abonosPorSolicitud = {}; // solicitud_id -> [abonos]
+
+  // ============================================================
+  // 1. ACCESO CON SUPABASE AUTH
+  // ============================================================
+
+  function requireSupabase() {
+    if (typeof supabaseClient === "undefined" || !supabaseClient) {
+      loginError.textContent = "No se pudo cargar la conexión. Revisa supabase-config.js.";
+      return false;
+    }
+    return true;
+  }
+
+  loginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
-    if (usernameInput.value.trim() && passwordInput.value.trim()) {
-      sessionStorage.setItem("admin_logged", "true");
-      showPanel();
-    } else {
-      loginError.textContent = "Introduce un usuario y contraseña para entrar.";
+    loginError.textContent = "";
+
+    if (!requireSupabase()) return;
+
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+
+    const submitBtn = loginForm.querySelector("button[type='submit']");
+    const originalText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Comprobando acceso...";
+
+    const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+
+    submitBtn.disabled = false;
+    submitBtn.textContent = originalText;
+
+    if (error) {
+      loginError.textContent = "Correo o contraseña incorrectos.";
+      console.error("Error de acceso:", error.message);
+      return;
     }
+
+    passwordInput.value = "";
+    await showPanel();
   });
 
-  logoutButton.addEventListener("click", () => {
-    sessionStorage.removeItem("admin_logged");
+  logoutButton.addEventListener("click", async () => {
+    if (typeof supabaseClient !== "undefined" && supabaseClient) {
+      await supabaseClient.auth.signOut();
+    }
     adminPanel.classList.add("hidden");
     loginScreen.classList.remove("hidden");
     loginForm.reset();
+    loginError.textContent = "";
   });
 
-  function showPanel() {
+  async function showPanel() {
     loginScreen.classList.add("hidden");
     adminPanel.classList.remove("hidden");
-    initInitialData();
+
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (user) {
+      const shortName = (user.email || "").split("@")[0];
+      if (adminNameEl) adminNameEl.textContent = "ADMINISTRADORA";
+      if (adminEmailLabel) adminEmailLabel.textContent = user.email.toUpperCase();
+      console.log("Sesión activa:", shortName);
+    }
+
+    await loadAll();
     renderAll();
   }
 
-  // 2. LECTURA Y ESCRITURA EN LOCALSTORAGE
-  function getStoredData() {
-    const sold = JSON.parse(localStorage.getItem(STORAGE_KEYS.SOLD_NUMBERS) || "[]");
-    const pending = JSON.parse(localStorage.getItem(STORAGE_KEYS.PENDING_NUMBERS) || "[]");
-    const requests = JSON.parse(localStorage.getItem(STORAGE_KEYS.REQUESTS) || "[]");
-    return {
-      soldSet: new Set(sold),
-      pendingSet: new Set(pending),
-      requests
-    };
-  }
+  // ============================================================
+  // 2. LECTURA DE DATOS DESDE SUPABASE
+  // ============================================================
 
-  function saveStoredData(soldSet, pendingSet, requests) {
-    localStorage.setItem(STORAGE_KEYS.SOLD_NUMBERS, JSON.stringify([...soldSet]));
-    localStorage.setItem(STORAGE_KEYS.PENDING_NUMBERS, JSON.stringify([...pendingSet]));
-    localStorage.setItem(STORAGE_KEYS.REQUESTS, JSON.stringify(requests));
-  }
+  async function loadAll() {
+    // Solicitudes
+    const { data: sols, error: errSol } = await supabaseClient
+      .from("solicitudes")
+      .select("*")
+      .order("creado", { ascending: false });
 
-  // No se crean solicitudes de ejemplo: el panel arranca completamente vacío.
-  // Todos los números quedan disponibles hasta que llegue una reserva real desde la web.
-  function initInitialData() {
-    const { soldSet, pendingSet, requests } = getStoredData();
-    // Solo nos aseguramos de que las claves existan en el almacenamiento.
-    saveStoredData(soldSet, pendingSet, requests);
-  }
-
-  // 3. RENDERIZADO DE TABLA Y MÉTRICAS
-  function renderAll() {
-    const { soldSet, pendingSet, requests } = getStoredData();
-
-    const pendingList = requests.filter(r => r.status === "pending");
-    const partialList = requests.filter(r => r.status === "partial");
-
-    // Métricas
-    soldCountEl.textContent = soldSet.size;
-    pendingCountEl.textContent = pendingList.length;
-    partialCountEl.textContent = partialList.length;
-
-    // Dinero recaudado real (ventas completas + parte abonada de plazos)
-    const collected = requests.reduce((sum, r) => {
-      if (r.status === "approved") return sum + (r.amount || 0);
-      if (r.status === "partial") return sum + (r.paidAmount || 0);
-      return sum;
-    }, 0);
-    approvedTotalEl.textContent = `$${collected.toLocaleString("en-US")}`;
-
-    // Dinero pendiente de cobro en solicitudes activas
-    const debt = requests.reduce((sum, r) => {
-      if (r.status === "partial" || r.status === "pending") {
-        return sum + (r.remainingAmount !== undefined ? r.remainingAmount : r.amount);
-      }
-      return sum;
-    }, 0);
-    debtTotalEl.textContent = `$${debt.toLocaleString("en-US")}`;
-
-    // Filtrar solicitudes
-    const query = searchInput.value.trim().toLowerCase();
-    const filter = statusFilter.value;
-
-    const filtered = requests.filter(req => {
-      const matchFilter = filter === "all" || req.status === filter;
-      const matchQuery =
-        req.id.toLowerCase().includes(query) ||
-        req.buyer.toLowerCase().includes(query) ||
-        req.phone.toLowerCase().includes(query) ||
-        req.numbers.some(n => String(n).includes(query));
-      return matchFilter && matchQuery;
-    });
-
-    requestCounterEl.textContent = `${filtered.length} ${filtered.length === 1 ? 'solicitud' : 'solicitudes'}`;
-
-    // Dibujar filas de tabla
-    requestsTable.innerHTML = "";
-    if (filtered.length === 0) {
-      emptyState.classList.remove("hidden");
+    if (errSol) {
+      console.error("Error al leer solicitudes:", errSol.message);
+      showToast("No se pudieron cargar las solicitudes.");
+      solicitudes = [];
     } else {
-      emptyState.classList.add("hidden");
-      filtered.forEach(req => {
-        const waPhone = getUSCleanDigits(req.phone);
-        const tr = document.createElement("tr");
+      solicitudes = sols || [];
+    }
 
-        let statusText = "En revisión";
-        if (req.status === "partial") statusText = "A plazos";
-        if (req.status === "approved") statusText = "Pagado";
-        if (req.status === "rejected") statusText = "Rechazada";
+    // Números
+    const { data: nums, error: errNum } = await supabaseClient
+      .from("numeros")
+      .select("numero,estado");
 
-        const pillClass = req.status === "approved" ? "sold-pill" : "pending-pill";
+    if (errNum) {
+      console.error("Error al leer números:", errNum.message);
+      numerosMap = {};
+    } else {
+      numerosMap = {};
+      (nums || []).forEach(r => { numerosMap[r.numero] = r.estado; });
+    }
 
-        tr.innerHTML = `
-          <td>
-            <strong>${req.buyer}</strong><br>
-            <small class="muted">${req.id}</small> · 
-            <a href="https://wa.me/${waPhone}" target="_blank" style="color:var(--green); text-decoration:none; font-size:11px;">
-              💬 WhatsApp (${formatUSDisplay(req.phone)})
-            </a>
-          </td>
-          <td>
-            <div class="ticket-pills">
-              ${req.numbers.map(n => `<span class="ticket-pill ${pillClass}">${String(n).padStart(3, "0")}</span>`).join(" ")}
-            </div>
-          </td>
-          <td>${req.numbers.length} boletas</td>
-          <td>
-            <strong>$${req.paidAmount || 0}</strong> <small class="muted">/ $${req.amount} USD</small>
-          </td>
-          <td>
-            <span style="color: ${req.remainingAmount > 0 ? 'var(--amber)' : 'var(--muted)'}; font-weight:600;">
-              $${req.remainingAmount !== undefined ? req.remainingAmount : req.amount} USD
-            </span>
-          </td>
-          <td>
-            <span class="status-badge ${req.status}">${statusText}</span>
-          </td>
-          <td>
-            <button type="button" class="button button-small button-outline" data-id="${req.id}">
-              Gestionar
-            </button>
-          </td>
-        `;
+    // Abonos
+    const { data: abs, error: errAb } = await supabaseClient
+      .from("abonos")
+      .select("solicitud_id,monto,nota,creado");
 
-        tr.querySelector("button").addEventListener("click", () => openManageModal(req.id));
-        requestsTable.append(tr);
+    if (errAb) {
+      console.error("Error al leer abonos:", errAb.message);
+      abonosPorSolicitud = {};
+    } else {
+      abonosPorSolicitud = {};
+      (abs || []).forEach(a => {
+        if (!abonosPorSolicitud[a.solicitud_id]) abonosPorSolicitud[a.solicitud_id] = [];
+        abonosPorSolicitud[a.solicitud_id].push(a);
       });
     }
   }
 
-  // 4. MODAL DE GESTIÓN (PAGO COMPLETO, A PLAZOS O RECHAZO)
-  function openManageModal(requestId) {
-    const { requests, soldSet, pendingSet } = getStoredData();
-    const req = requests.find(r => r.id === requestId);
-    if (!req) return;
+  // Reconstruye la lista de números de una solicitud leyendo la tabla numeros
+  // (los números apartados/vendidos que apuntan a esa solicitud por código).
+  function numerosDeSolicitud(sol) {
+    // Método directo: si algún número guarda la solicitud, los listamos.
+    const directos = Object.keys(numerosMap)
+      .filter(n => numerosMap[n] && false) // reservado para vínculo futuro por solicitud_id
+      .map(Number);
 
-    const formattedNumbers = req.numbers.map(n => String(n).padStart(3, "0"));
-    const waPhone = getUSCleanDigits(req.phone);
-    const displayPhone = formatUSDisplay(req.phone);
-    const currentRemaining = req.remainingAmount !== undefined ? req.remainingAmount : req.amount;
+    if (directos.length) return directos;
+
+    // Método por notas: guardamos los números en las notas al apartar.
+    const match = (sol.notas || "").match(/Números:\s*([0-9,\s]+)/i);
+    if (match) {
+      return match[1].split(",").map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n));
+    }
+    return [];
+  }
+
+  // ============================================================
+  // 3. MÉTRICAS Y TABLA
+  // ============================================================
+
+  function estadoLegible(estado) {
+    if (estado === "pendiente") return "En revisión";
+    if (estado === "plazos") return "A plazos";
+    if (estado === "pagado") return "Pagado";
+    if (estado === "rechazado") return "Rechazada";
+    return estado;
+  }
+
+  function renderAll() {
+    // --- Métricas ---
+    const vendidos = Object.values(numerosMap).filter(e => e === "vendido").length;
+    const apartados = Object.values(numerosMap).filter(e => e === "apartado").length;
+
+    const pendientes = solicitudes.filter(s => s.estado === "pendiente").length;
+    const aPlazos = solicitudes.filter(s => s.estado === "plazos").length;
+
+    if (soldCountEl) soldCountEl.textContent = vendidos.toLocaleString("es-ES");
+    if (pendingCountEl) pendingCountEl.textContent = pendientes.toLocaleString("es-ES");
+    if (partialCountEl) partialCountEl.textContent = aPlazos.toLocaleString("es-ES");
+
+    // Recaudado real: ventas completas + abonos de solicitudes a plazos
+    const recaudado = solicitudes.reduce((sum, s) => {
+      if (s.estado === "pagado") return sum + Number(s.total || 0);
+      if (s.estado === "plazos") return sum + Number(s.abonado || 0);
+      if (s.estado === "pendiente") return sum + Number(s.abonado || 0);
+      return sum;
+    }, 0);
+    if (approvedTotalEl) approvedTotalEl.textContent = money(recaudado);
+
+    // Saldo por cobrar: lo que falta de las solicitudes activas
+    const deuda = solicitudes.reduce((sum, s) => {
+      if (s.estado === "pendiente" || s.estado === "plazos") {
+        return sum + Number(s.saldo || 0);
+      }
+      return sum;
+    }, 0);
+    if (debtTotalEl) debtTotalEl.textContent = money(deuda);
+
+    // --- Filtro y búsqueda ---
+    const query = searchInput.value.trim().toLowerCase();
+    const filter = statusFilter.value;
+
+    const filtered = solicitudes.filter(s => {
+      const okFilter = filter === "all" || s.estado === filter;
+      if (!okFilter) return false;
+      if (!query) return true;
+
+      const nums = numerosDeSolicitud(s).map(fmtNum).join(" ");
+      return (
+        (s.codigo || "").toLowerCase().includes(query) ||
+        (s.comprador || "").toLowerCase().includes(query) ||
+        (s.telefono || "").toLowerCase().includes(query) ||
+        nums.includes(query)
+      );
+    });
+
+    if (requestCounterEl) {
+      requestCounterEl.textContent = `${filtered.length} ${filtered.length === 1 ? "solicitud" : "solicitudes"}`;
+    }
+
+    // --- Dibujar tabla ---
+    requestsTable.innerHTML = "";
+
+    if (filtered.length === 0) {
+      emptyState.classList.remove("hidden");
+      return;
+    }
+    emptyState.classList.add("hidden");
+
+    filtered.forEach(sol => {
+      const nums = numerosDeSolicitud(sol);
+      const tr = document.createElement("tr");
+
+      const pillClass =
+        sol.estado === "pagado" ? "sold-pill" :
+        sol.estado === "rechazado" ? "rejected-pill" : "pending-pill";
+
+      tr.innerHTML = `
+        <td>
+          <strong>${sol.comprador || "—"}</strong><br>
+          <small class="muted">${sol.codigo || ""}</small> ·
+          <a href="${waLink(sol.telefono_digitos || sol.telefono)}" target="_blank"
+             style="color:var(--green); text-decoration:none; font-size:11px;">
+            💬 WhatsApp (${sol.telefono || ""})
+          </a>
+        </td>
+        <td>
+          <div class="ticket-pills">
+            ${nums.length
+              ? nums.map(n => `<span class="ticket-pill ${pillClass}">${fmtNum(n)}</span>`).join(" ")
+              : '<span class="muted">—</span>'}
+          </div>
+        </td>
+        <td>${nums.length} boletas</td>
+        <td>
+          <strong>${money(sol.abonado)}</strong> <small class="muted">/ ${money(sol.total)} USD</small>
+        </td>
+        <td>
+          <span style="color:${Number(sol.saldo) > 0 ? "var(--amber)" : "var(--muted)"}; font-weight:600;">
+            ${money(sol.saldo)} USD
+          </span>
+        </td>
+        <td><span class="status-badge ${sol.estado}">${estadoLegible(sol.estado)}</span></td>
+        <td>
+          <button type="button" class="button button-small button-outline" data-id="${sol.id}">
+            Gestionar
+          </button>
+        </td>
+      `;
+
+      tr.querySelector("button").addEventListener("click", () => openManageModal(sol.id));
+      requestsTable.append(tr);
+    });
+  }
+
+  // ============================================================
+  // 4. MODAL DE GESTIÓN
+  // ============================================================
+
+  function openManageModal(solicitudId) {
+    const sol = solicitudes.find(s => s.id === solicitudId);
+    if (!sol) return;
+
+    const nums = numerosDeSolicitud(sol);
+    const numsFmt = nums.map(fmtNum);
+    const waPhone = sol.telefono_digitos || cleanDigits(sol.telefono);
+    const restante = Number(sol.saldo || 0);
+    const abonado = Number(sol.abonado || 0);
+    const total = Number(sol.total || 0);
 
     let statusTitle = "En revisión (Apartado en amarillo)";
-    if (req.status === "partial") statusTitle = "Acuerdo a plazos / Abono activo (Amarillo)";
-    if (req.status === "approved") statusTitle = "Pagado 100% / Vendido definitivo";
-    if (req.status === "rejected") statusTitle = "Solicitud rechazada (Números liberados)";
+    if (sol.estado === "plazos") statusTitle = "Acuerdo a plazos / Abono activo (Amarillo)";
+    if (sol.estado === "pagado") statusTitle = "Pagado 100% / Vendido definitivo";
+    if (sol.estado === "rechazado") statusTitle = "Solicitud rechazada (Números liberados)";
+
+    const activa = sol.estado === "pendiente" || sol.estado === "plazos";
 
     detailsContent.innerHTML = `
       <div class="confirm-flow">
         <header class="flow-header">
           <div>
-            <p class="eyebrow">SOLICITUD #${req.id} · ${req.createdAt}</p>
-            <h2 style="font-size: 19px; margin: 0;">${statusTitle}</h2>
+            <p class="eyebrow">SOLICITUD #${sol.codigo || ""}</p>
+            <h2 style="font-size:19px; margin:0;">${statusTitle}</h2>
           </div>
           <div class="flow-metrics">
             <div class="metric-card">
               <span class="metric-label">Total boletas</span>
-              <strong>$${req.amount} USD</strong>
+              <strong>${money(total)} USD</strong>
             </div>
             <div class="metric-card">
               <span class="metric-label">Abonado hasta hoy</span>
-              <strong style="color:var(--green);">$${req.paidAmount || 0} USD</strong>
+              <strong style="color:var(--green);">${money(abonado)} USD</strong>
             </div>
             <div class="metric-card">
               <span class="metric-label">Saldo pendiente</span>
-              <strong style="color:var(--amber);">$${currentRemaining} USD</strong>
+              <strong style="color:var(--amber);">${money(restante)} USD</strong>
             </div>
           </div>
         </header>
 
-        <!-- DATOS DEL COMPRADOR -->
         <section class="step-card">
           <p class="eyebrow">DATOS DEL COMPRADOR</p>
-          <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
             <div>
-              <p style="margin: 0 0 4px;"><strong>${req.buyer}</strong> (${displayPhone})</p>
-              <p class="muted" style="margin: 0;">Método: ${req.method}</p>
+              <p style="margin:0 0 4px;"><strong>${sol.comprador || "—"}</strong> (${sol.telefono || "—"})</p>
+              <p class="muted" style="margin:0;">Método: ${sol.metodo || "—"}</p>
             </div>
-            <a href="https://wa.me/${waPhone}" target="_blank" class="button button-small button-outline" style="color:var(--green);">
-              💬 Abrir WhatsApp (${displayPhone})
+            <a href="${waLink(waPhone)}" target="_blank" class="button button-small button-outline" style="color:var(--green);">
+              💬 Abrir WhatsApp
             </a>
           </div>
 
-          <div style="margin-top: 10px;">
-            <span class="muted" style="font-size:11px;">Boletas apartadas (${req.numbers.length}):</span>
-            <div class="ticket-pills" style="margin-top: 4px;">
-              ${formattedNumbers.map(n => `<span class="ticket-pill pending-pill">${n}</span>`).join("")}
+          <div style="margin-top:10px;">
+            <span class="muted" style="font-size:11px;">Boletas apartadas (${nums.length}):</span>
+            <div class="ticket-pills" style="margin-top:4px;">
+              ${numsFmt.length
+                ? numsFmt.map(n => `<span class="ticket-pill pending-pill">${n}</span>`).join("")
+                : '<span class="muted">Sin números asociados</span>'}
             </div>
           </div>
 
-          ${req.notes ? `
-            <div style="margin-top: 10px; background:#111; padding: 8px 12px; border-radius: 6px; font-size:12px; border:1px solid var(--line);">
-              <strong>Historial de notas / acuerdos:</strong><br>
-              <span style="color:#ddd;">${req.notes}</span>
+          ${sol.notas ? `
+            <div style="margin-top:10px; background:#111; padding:8px 12px; border-radius:6px; font-size:12px; border:1px solid var(--line);">
+              <strong>Historial / acuerdos:</strong><br>
+              <span style="color:#ddd;">${sol.notas}</span>
             </div>
-          ` : ''}
+          ` : ""}
         </section>
 
-        ${req.status !== "approved" && req.status !== "rejected" ? `
-          <!-- VERIFICACIÓN BANCARIA PREVIA -->
+        ${activa ? `
           <section class="step-card">
             <p class="eyebrow">VERIFICACIÓN PREVIA</p>
             <div class="checklist">
@@ -285,8 +395,7 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
           </section>
 
-          <!-- OPCIÓN B: REGISTRAR ABONO / PAGO A PLAZOS -->
-          <section class="step-card" style="border-color: rgba(96, 165, 250, 0.4);">
+          <section class="step-card" style="border-color: rgba(96,165,250,.4);">
             <div style="display:flex; justify-content:space-between; align-items:center;">
               <div>
                 <p class="eyebrow" style="color:var(--blue);">PLAN A PLAZOS</p>
@@ -299,57 +408,57 @@ document.addEventListener("DOMContentLoaded", () => {
               <div class="field-row">
                 <div>
                   <label for="installment-paid">Monto que abona en este pago ($ USD)</label>
-                  <input type="number" id="installment-paid" min="1" max="${currentRemaining}" placeholder="Ej. 30" value="${Math.min(30, currentRemaining)}">
+                  <input type="number" id="installment-paid" min="1" max="${restante}"
+                         placeholder="Ej. 30" value="${Math.min(30, restante) || 0}">
                 </div>
                 <div>
                   <label>Nuevo saldo por cobrar</label>
-                  <input type="text" id="calc-remaining" readonly style="color:var(--amber); font-weight:bold;" value="$${Math.max(0, currentRemaining - Math.min(30, currentRemaining))} USD">
+                  <input type="text" id="calc-remaining" readonly
+                         style="color:var(--amber); font-weight:bold;"
+                         value="${money(Math.max(0, restante - Math.min(30, restante)))} USD">
                 </div>
               </div>
               <div>
                 <label for="installment-notes">Acuerdo o fecha límite para el siguiente abono</label>
-                <textarea id="installment-notes" rows="2" placeholder="Ej. Abonó $30 hoy por Zelle. Acuerda liquidar los $30 restantes el viernes."></textarea>
+                <textarea id="installment-notes" rows="2"
+                          placeholder="Ej. Abonó $30 hoy por Zelle. Acuerda liquidar el resto el viernes."></textarea>
               </div>
 
-              <button type="button" id="btn-save-installment" class="button button-blue full-width" style="margin-top:10px;" disabled>
+              <button type="button" id="btn-save-installment" class="button full-width" style="margin-top:10px;" disabled>
                 💾 Registrar Abono y Enviar Recibo por WhatsApp
               </button>
             </div>
           </section>
 
-          <!-- OPCIÓN A: LIQUIDAR PAGO COMPLETO Y VENDER DEFINITIVAMENTE -->
-          <section class="step-card" style="border-color: rgba(215, 181, 109, 0.4);">
+          <section class="step-card" style="border-color: rgba(215,181,109,.4);">
             <p class="eyebrow">LIQUIDACIÓN TOTAL (100% PAGADO)</p>
-            <h3>${req.paidAmount > 0 ? `Liquidar Saldo Restante ($${currentRemaining} USD)` : `Confirmar Pago Total ($${req.amount} USD)`}</h3>
-            <p class="muted" style="margin-bottom: 12px;">
-              Los números pasarán de amarillo a <strong>Vendido definitivo (gris tachado)</strong> y se generará la confirmación oficial.
+            <h3>${abonado > 0 ? `Liquidar Saldo Restante (${money(restante)} USD)` : `Confirmar Pago Total (${money(total)} USD)`}</h3>
+            <p class="muted" style="margin-bottom:12px;">
+              Los números pasarán de amarillo a <strong>vendido definitivo</strong> y se generará la confirmación oficial.
             </p>
 
             <div class="modal-actions">
               <button type="button" id="btn-modal-reject" class="button button-danger">
                 Rechazar y liberar números
               </button>
-
               <button type="button" id="btn-modal-confirm-full" class="button button-gold" disabled>
-                ${req.paidAmount > 0 ? `Liquidar $${currentRemaining} USD y Cerrar Venta` : `Confirmar Pago Total ($${req.amount} USD)`}
+                ${abonado > 0 ? `Liquidar ${money(restante)} USD y Cerrar Venta` : `Confirmar Pago Total (${money(total)} USD)`}
               </button>
             </div>
           </section>
         ` : `
-          <!-- SOLICITUD YA CERRADA -->
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
-            <span class="muted">Esta solicitud está cerrada como <strong>${req.status.toUpperCase()}</strong>.</span>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; gap:10px; flex-wrap:wrap;">
+            <span class="muted">Esta solicitud está cerrada como <strong>${sol.estado.toUpperCase()}</strong>.</span>
             <button type="button" id="btn-reopen" class="button button-outline">
               Reabrir a En revisión (Amarillo)
             </button>
           </div>
         `}
-
       </div>
     `;
 
-    // Lógica interactiva cuando la solicitud está activa
-    if (req.status !== "approved" && req.status !== "rejected") {
+    // ---------- INTERACTIVIDAD ----------
+    if (activa) {
       const checkBank = detailsContent.querySelector("#check-bank-account");
       const btnConfirmFull = detailsContent.querySelector("#btn-modal-confirm-full");
       const btnReject = detailsContent.querySelector("#btn-modal-reject");
@@ -358,183 +467,208 @@ document.addEventListener("DOMContentLoaded", () => {
       const calcRemaining = detailsContent.querySelector("#calc-remaining");
       const inputNotes = detailsContent.querySelector("#installment-notes");
 
-      // La casilla de verificación habilita ambos botones de cobro
       checkBank.addEventListener("change", () => {
         btnConfirmFull.disabled = !checkBank.checked;
         btnSaveInstallment.disabled = !checkBank.checked;
       });
 
-      // Cálculo en tiempo real del saldo restante al cambiar el input de abono
       inputPaid.addEventListener("input", () => {
         const val = parseFloat(inputPaid.value) || 0;
-        const newRem = Math.max(0, currentRemaining - val);
-        calcRemaining.value = `$${newRem} USD`;
+        calcRemaining.value = `${money(Math.max(0, restante - val))} USD`;
       });
 
-      // ACCIÓN 1: LIQUIDAR PAGO COMPLETO (Vendido definitivo)
-      btnConfirmFull.addEventListener("click", () => {
-        const { soldSet, pendingSet, requests: curReqs } = getStoredData();
+      // --- CONFIRMAR PAGO COMPLETO ---
+      btnConfirmFull.addEventListener("click", async () => {
+        btnConfirmFull.disabled = true;
+        btnConfirmFull.textContent = "Registrando venta...";
 
-        // Mover números de amarillo (pending) a vendido definitivo (sold)
-        req.numbers.forEach(n => {
-          pendingSet.delete(n);
-          soldSet.add(n);
-        });
+        // 1. Marcar los números como vendidos
+        if (nums.length) {
+          const { error: errNum } = await supabaseClient
+            .from("numeros")
+            .update({ estado: "vendido" })
+            .in("numero", nums);
 
-        const target = curReqs.find(r => r.id === req.id);
-        if (target) {
-          target.status = "approved";
-          target.paidAmount = target.amount;
-          target.remainingAmount = 0;
-          target.notes = (target.notes ? target.notes + " | " : "") + "Liquidado al 100%.";
+          if (errNum) {
+            alert("No se pudieron marcar los números como vendidos: " + errNum.message);
+            btnConfirmFull.disabled = false;
+            return;
+          }
         }
 
-        saveStoredData(soldSet, pendingSet, curReqs);
+        // 2. Actualizar la solicitud
+        const { error: errSol } = await supabaseClient
+          .from("solicitudes")
+          .update({
+            estado: "pagado",
+            abonado: total,
+            saldo: 0,
+            notas: (sol.notas ? sol.notas + " | " : "") + "Liquidado al 100%."
+          })
+          .eq("id", sol.id);
+
+        if (errSol) {
+          alert("No se pudo cerrar la solicitud: " + errSol.message);
+          btnConfirmFull.disabled = false;
+          return;
+        }
+
+        await loadAll();
         renderAll();
 
-        // Mensaje oficial redactado con formato US
-        const waMsg = encodeURIComponent(
-          `🎉 *¡PAGO CONFIRMADO - RIFA DEL VEHÍCULO!* 🎉\n\n` +
-          `Hola *${req.buyer}*, tu pago total de *$${req.amount} USD* correspondiente a la solicitud *#${req.id}* ha sido verificado con éxito.\n\n` +
-          `🎟 *Tus números oficiales son:* ${formattedNumbers.join(", ")}\n\n` +
-          `¡Ya estás participando formalmente en el sorteo! Te deseamos muchísima suerte.`
-        );
+        const waMsg =
+          `🎉 *¡PAGO CONFIRMADO - RIFA FAMILIAR!* 🎉\n\n` +
+          `Hola *${sol.comprador}*, tu pago total de *${money(total)} USD* de la solicitud *#${sol.codigo}* ha sido verificado.\n\n` +
+          `🎟 *Tus números oficiales son:* ${numsFmt.join(", ")}\n\n` +
+          `¡Ya estás participando formalmente! Muchísima suerte.`;
 
         detailsContent.innerHTML = `
-          <div style="text-align: center; padding: 20px 10px;">
-            <span style="font-size: 42px;">🏆</span>
-            <h2 style="color: var(--gold); margin: 10px 0;">¡Venta Completada y Cerrada!</h2>
-            <p class="muted">
-              Los números <strong>${formattedNumbers.join(", ")}</strong> pasaron a vendidos definitivamente (gris tachado).
-            </p>
-            <div style="margin: 20px 0; display:flex; flex-direction:column; gap:10px;">
-              <a href="https://wa.me/${waPhone}?text=${waMsg}" target="_blank" class="button button-gold full-width" style="text-decoration:none;">
-                💬 Enviar felicitación oficial a ${req.buyer} por WhatsApp
+          <div style="text-align:center; padding:20px 10px;">
+            <span style="font-size:42px;">🏆</span>
+            <h2 style="color:var(--gold); margin:10px 0;">¡Venta completada!</h2>
+            <p class="muted">Los números <strong>${numsFmt.join(", ")}</strong> quedaron bloqueados como vendidos.</p>
+            <div style="margin:20px 0; display:flex; flex-direction:column; gap:10px;">
+              <a href="${waLink(waPhone, waMsg)}" target="_blank" class="button button-gold full-width" style="text-decoration:none;">
+                💬 Enviar confirmación a ${sol.comprador} por WhatsApp
               </a>
-              <button type="button" class="button button-outline full-width" onclick="document.querySelector('#details-dialog').close()">
+              <button type="button" class="button button-outline full-width"
+                      onclick="document.querySelector('#details-dialog').close()">
                 Cerrar ventana
               </button>
             </div>
           </div>
         `;
 
-        showToast(`Solicitud #${req.id} liquidada al 100%.`);
+        showToast(`Solicitud #${sol.codigo} liquidada al 100%.`);
       });
 
-      // ACCIÓN 2: GUARDAR ABONO A PLAZOS
-      btnSaveInstallment.addEventListener("click", () => {
+      // --- REGISTRAR ABONO ---
+      btnSaveInstallment.addEventListener("click", async () => {
         const abonoValor = parseFloat(inputPaid.value) || 0;
-        if (abonoValor <= 0) {
-          alert("Por favor introduce un monto de abono mayor a $0 USD.");
+
+        if (abonoValor <= 0) { alert("Introduce un monto mayor a $0 USD."); return; }
+        if (abonoValor > restante) { alert(`El abono no puede superar el saldo pendiente (${money(restante)} USD).`); return; }
+
+        btnSaveInstallment.disabled = true;
+        btnSaveInstallment.textContent = "Registrando abono...";
+
+        const nuevoAbonado = abonado + abonoValor;
+        const nuevoSaldo = Math.max(0, total - nuevoAbonado);
+        const seCompleta = nuevoSaldo === 0;
+
+        // 1. Registrar el abono en el historial
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        const { error: errAb } = await supabaseClient
+          .from("abonos")
+          .insert([{
+            solicitud_id: sol.id,
+            monto: abonoValor,
+            nota: inputNotes.value.trim() || "",
+            registrado_por: user ? user.id : null
+          }]);
+
+        if (errAb) {
+          alert("No se pudo registrar el abono: " + errAb.message);
+          btnSaveInstallment.disabled = false;
           return;
         }
-        if (abonoValor > currentRemaining) {
-          alert(`El abono ($${abonoValor} USD) no puede superar el saldo pendiente ($${currentRemaining} USD).`);
+
+        // 2. Actualizar la solicitud
+        const notaTexto = inputNotes.value.trim();
+        const { error: errSol } = await supabaseClient
+          .from("solicitudes")
+          .update({
+            abonado: nuevoAbonado,
+            saldo: nuevoSaldo,
+            estado: seCompleta ? "pagado" : "plazos",
+            notas: (sol.notas ? sol.notas + " | " : "") +
+                   `Abonó ${money(abonoValor)} USD${notaTexto ? ": " + notaTexto : ""}`
+          })
+          .eq("id", sol.id);
+
+        if (errSol) {
+          alert("No se pudo actualizar la solicitud: " + errSol.message);
+          btnSaveInstallment.disabled = false;
           return;
         }
 
-        const { soldSet, pendingSet, requests: curReqs } = getStoredData();
-
-        // Los números SE MANTIENEN en amarillo (pendingSet)
-        req.numbers.forEach(n => pendingSet.add(n));
-
-        const target = curReqs.find(r => r.id === req.id);
-        if (target) {
-          target.paidAmount = (target.paidAmount || 0) + abonoValor;
-          target.remainingAmount = Math.max(0, target.amount - target.paidAmount);
-
-          const notaTexto = inputNotes.value.trim();
-          if (notaTexto) {
-            target.notes = (target.notes ? target.notes + " | " : "") + `Abonó $${abonoValor} USD: ${notaTexto}`;
-          }
-
-          target.status = target.remainingAmount === 0 ? "approved" : "partial";
-
-          // Si con este abono completó el total, se convierte en vendido definitivo automáticamente
-          if (target.status === "approved") {
-            req.numbers.forEach(n => {
-              pendingSet.delete(n);
-              soldSet.add(n);
-            });
-          }
+        // 3. Si con este abono se completa, los números pasan a vendidos
+        if (seCompleta && nums.length) {
+          await supabaseClient.from("numeros").update({ estado: "vendido" }).in("numero", nums);
         }
 
-        saveStoredData(soldSet, pendingSet, curReqs);
+        await loadAll();
         renderAll();
 
-        const saldoRestante = target.remainingAmount;
-        const waMsgAbono = encodeURIComponent(
-          `📑 *RECIBO DE ABONO - RIFA DEL VEHÍCULO* 📑\n\n` +
-          `Hola *${req.buyer}*, hemos registrado tu abono de *$${abonoValor} USD* para la solicitud *#${req.id}*.\n\n` +
-          `🎟 *Boletas apartadas:* ${formattedNumbers.join(", ")}\n` +
-          `💵 *Total acumulado abonado:* $${target.paidAmount} USD\n` +
-          `⏳ *Saldo pendiente por liquidar:* $${saldoRestante} USD\n\n` +
-          `${inputNotes.value.trim() ? `📌 *Acuerdo:* ${inputNotes.value.trim()}\n\n` : ''}` +
-          `Tus números permanecen apartados y protegidos a tu nombre en la rifa. ¡Gracias!`
-        );
+        const waMsgAbono =
+          `📑 *RECIBO DE ABONO - RIFA FAMILIAR* 📑\n\n` +
+          `Hola *${sol.comprador}*, registramos tu abono de *${money(abonoValor)} USD* de la solicitud *#${sol.codigo}*.\n\n` +
+          `🎟 *Boletas apartadas:* ${numsFmt.join(", ")}\n` +
+          `💵 *Total abonado:* ${money(nuevoAbonado)} USD\n` +
+          `⏳ *Saldo pendiente:* ${money(nuevoSaldo)} USD\n\n` +
+          `${notaTexto ? `📌 *Acuerdo:* ${notaTexto}\n\n` : ""}` +
+          `Tus números siguen apartados y protegidos a tu nombre. ¡Gracias!`;
 
         detailsContent.innerHTML = `
-          <div style="text-align: center; padding: 20px 10px;">
-            <span style="font-size: 42px;">📑</span>
-            <h2 style="color: var(--blue); margin: 10px 0;">¡Abono registrado con éxito!</h2>
+          <div style="text-align:center; padding:20px 10px;">
+            <span style="font-size:42px;">📑</span>
+            <h2 style="color:var(--blue); margin:10px 0;">¡Abono registrado!</h2>
             <p class="muted">
-              Abono: <strong>$${abonoValor} USD</strong>. Saldo pendiente: <strong>$${saldoRestante} USD</strong>.<br>
-              Las boletas continúan <strong>apartadas en amarillo</strong> para el comprador.
+              Abono: <strong>${money(abonoValor)} USD</strong>. Saldo pendiente: <strong>${money(nuevoSaldo)} USD</strong>.<br>
+              ${seCompleta
+                ? "El saldo quedó a cero: las boletas pasaron a <strong>vendido definitivo</strong>."
+                : "Las boletas continúan <strong>apartadas en amarillo</strong>."}
             </p>
-            <div style="margin: 20px 0; display:flex; flex-direction:column; gap:10px;">
-              <a href="https://wa.me/${waPhone}?text=${waMsgAbono}" target="_blank" class="button button-blue full-width" style="text-decoration:none;">
-                💬 Enviar recibo de abono a ${req.buyer} por WhatsApp
+            <div style="margin:20px 0; display:flex; flex-direction:column; gap:10px;">
+              <a href="${waLink(waPhone, waMsgAbono)}" target="_blank" class="button button-gold full-width" style="text-decoration:none;">
+                💬 Enviar recibo a ${sol.comprador} por WhatsApp
               </a>
-              <button type="button" class="button button-outline full-width" onclick="document.querySelector('#details-dialog').close()">
+              <button type="button" class="button button-outline full-width"
+                      onclick="document.querySelector('#details-dialog').close()">
                 Cerrar ventana
               </button>
             </div>
           </div>
         `;
 
-        showToast(`Abono de $${abonoValor} USD registrado en #${req.id}.`);
+        showToast(`Abono de ${money(abonoValor)} registrado en #${sol.codigo}.`);
       });
 
-      // ACCIÓN 3: RECHAZAR Y LIBERAR NÚMEROS
-      btnReject.addEventListener("click", () => {
-        if (!confirm(`¿Deseas rechazar la solicitud #${req.id}? Los números quedarán libres y disponibles para cualquier otro comprador.`)) {
-          return;
+      // --- RECHAZAR Y LIBERAR ---
+      btnReject.addEventListener("click", async () => {
+        if (!confirm(`¿Rechazar la solicitud #${sol.codigo}? Los números quedarán libres.`)) return;
+
+        if (nums.length) {
+          await supabaseClient.from("numeros").update({ estado: "disponible" }).in("numero", nums);
         }
 
-        const { soldSet, pendingSet, requests: curReqs } = getStoredData();
+        await supabaseClient
+          .from("solicitudes")
+          .update({ estado: "rechazado" })
+          .eq("id", sol.id);
 
-        req.numbers.forEach(n => {
-          pendingSet.delete(n);
-          soldSet.delete(n);
-        });
-
-        const target = curReqs.find(r => r.id === req.id);
-        if (target) target.status = "rejected";
-
-        saveStoredData(soldSet, pendingSet, curReqs);
+        await loadAll();
         renderAll();
         detailsDialog.close();
-        showToast(`Solicitud #${req.id} rechazada. Números liberados.`);
+        showToast(`Solicitud #${sol.codigo} rechazada. Números liberados.`);
       });
 
     } else {
-      // REABRIR SOLICITUD CERRADA
-      detailsContent.querySelector("#btn-reopen")?.addEventListener("click", () => {
-        const { soldSet, pendingSet, requests: curReqs } = getStoredData();
-        const target = curReqs.find(r => r.id === req.id);
-
-        if (target) {
-          req.numbers.forEach(n => {
-            soldSet.delete(n);
-            pendingSet.add(n);
-          });
-          target.status = "pending";
+      // --- REABRIR SOLICITUD CERRADA ---
+      detailsContent.querySelector("#btn-reopen")?.addEventListener("click", async () => {
+        if (nums.length) {
+          await supabaseClient.from("numeros").update({ estado: "apartado" }).in("numero", nums);
         }
 
-        saveStoredData(soldSet, pendingSet, curReqs);
+        await supabaseClient
+          .from("solicitudes")
+          .update({ estado: "pendiente", abonado: 0, saldo: total })
+          .eq("id", sol.id);
+
+        await loadAll();
         renderAll();
         detailsDialog.close();
-        showToast(`Solicitud #${req.id} reabierta a En revisión (Amarillo).`);
+        showToast(`Solicitud #${sol.codigo} reabierta.`);
       });
     }
 
@@ -550,12 +684,30 @@ document.addEventListener("DOMContentLoaded", () => {
     setTimeout(() => toast.classList.remove("show"), 3500);
   }
 
-  // Buscador y filtros
+  // ---------- BUSCADOR Y FILTROS ----------
   searchInput.addEventListener("input", renderAll);
   statusFilter.addEventListener("change", renderAll);
 
-  // Auto-login si ya inició sesión
-  if (sessionStorage.getItem("admin_logged") === "true") {
-    showPanel();
+  // ---------- ACTUALIZACIÓN AUTOMÁTICA ----------
+  let refreshTimer = null;
+  function startAutoRefresh() {
+    if (refreshTimer) clearInterval(refreshTimer);
+    refreshTimer = setInterval(async () => {
+      if (adminPanel.classList.contains("hidden")) return;
+      if (detailsDialog.open) return; // no refrescar mientras hay un modal abierto
+      await loadAll();
+      renderAll();
+    }, 15000);
   }
+
+  // ---------- ARRANQUE ----------
+  (async () => {
+    if (!requireSupabase()) return;
+
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (session) {
+      await showPanel();
+    }
+    startAutoRefresh();
+  })();
 });
