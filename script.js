@@ -414,7 +414,8 @@ checkoutForm.addEventListener("submit", async (e) => {
         abonado: 0,
         saldo: total,
         estado: "pendiente",
-        notas: ""
+        notas: "",
+        numeros: numbers
       }]);
 
     if (errSol) throw errSol;
