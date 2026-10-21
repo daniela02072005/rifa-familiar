@@ -519,7 +519,7 @@ h2 { font-size: clamp(27px, 4vw, 38px); margin-bottom: 7px; }
 .promo-strip {
   margin-top: 16px;
   padding: 20px 22px;
-  background: #141412;
+  background: #A1C6EA;
   border: 1px solid var(--line);
   border-radius: var(--radius);
 }
