@@ -2,7 +2,7 @@ const PRICE_PER_NUMBER = 30;
 const TOTAL_NUMBERS = 1000; // Numeración del 000 al 999
 
 // Número de WhatsApp de la ADMINISTRACIÓN (formato internacional sin '+' ni símbolos)
-const ADMIN_WHATSAPP_PHONE = "13050000000";
+const ADMIN_WHATSAPP_PHONE = "17326261691";
 
 // Fotos del carrusel del vehículo. Colócalas en la carpeta "fotos/".
 const CAROUSEL_IMAGES = [
