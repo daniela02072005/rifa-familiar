@@ -385,9 +385,10 @@ h2 { font-size: clamp(27px, 4vw, 38px); margin-bottom: 7px; }
 .legend span { display: inline-flex; align-items: center; gap: 7px; }
 .legend-box { display: inline-block; width: 12px; height: 12px; border: 1px solid #555; border-radius: 3px; }
 .legend-box.available { background: #F4F8FD; border-color: #D3DFF0; }
-.legend-box.selected { background: var(--gold); border-color: var(--gold); }
-.legend-box.pending { background: var(--amber-dark); border-color: var(--amber); }
-.legend-box.sold { background: var(--sold); border-color: var(--sold); }
+.legend-box.selected  { background: var(--accent); border-color: var(--accent); }
+.legend-box.pending   { background: #E0E9F6; border-color: var(--accent); }
+.legend-box.sold      { background: #0B0E14; border-color: #0B0E14; }
+
 
 /* BARRA DE BÚSQUEDA Y NÚMEROS */
 .toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 17px; }
