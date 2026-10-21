@@ -444,11 +444,11 @@ checkoutForm.addEventListener("submit", async (e) => {
     // 4. Abrir WhatsApp con el mensaje redactado
     const formattedNumbers = numbers.map(formatNumber).join(", ");
     const message = `¡Hola! Acabo de apartar mis números en la web para la Rifa del Vehículo.\n\n` +
-      `📋 *Solicitud:* #${codigo}\n` +
-      `👤 *Nombre:* ${buyerName}\n` +
-      `📱 *Teléfono:* ${displayPhone}\n` +
-      `🎟 *Números apartados:* ${formattedNumbers}\n` +
-      `💵 *Total:* $${total} USD\n\n` +
+      ` *Solicitud:* #${codigo}\n` +
+      ` *Nombre:* ${buyerName}\n` +
+      ` *Teléfono:* ${displayPhone}\n` +
+      ` *Números apartados:* ${formattedNumbers}\n` +
+      ` *Total:* $${total} USD\n\n` +
       `Te adjunto por aquí mi comprobante de pago o conversemos para organizar mi abono a plazos. ¡Gracias!`;
 
     window.open(`https://wa.me/${ADMIN_WHATSAPP_PHONE}?text=${encodeURIComponent(message)}`, "_blank");
