@@ -19,16 +19,94 @@
   </header>
 
   <main>
+    <!-- HERO EN DOS COLUMNAS: TEXTO IZQUIERDA, CARRUSEL DERECHA -->
     <section class="hero">
-      <p class="eyebrow"><span></span>Sorteo oficial</p>
-      <h1>Tu número.<br><span>Tu oportunidad.</span></h1>
-      <p class="hero-copy">Elige tus números favoritos, aparta tus boletos y asegura tu participación en nuestra gran rifa.</p>
-      <div class="hero-price">
-        <span class="price-label">PRECIO POR BOLETA</span>
-        <span class="price">$30 <small>USD</small></span>
+      <div class="hero-grid">
+
+        <div class="hero-left">
+          <p class="eyebrow"><span></span>Sorteo oficial</p>
+          <h1>Tu número.<br><span>Tu oportunidad.</span></h1>
+          <p class="hero-copy">
+            Elige tus números favoritos, aparta tus boletos y asegura tu participación en nuestra gran rifa familiar.
+          </p>
+
+          <div class="hero-ticket-price">
+            <span class="ticket-icon" aria-hidden="true">🎟</span>
+            <div>
+              <span class="price-label">PRECIO POR BOLETA</span>
+              <span class="price">1 BOLETA = $30 <small>USD</small></span>
+            </div>
+          </div>
+
+          <div class="hero-rule"></div>
+
+          <p class="demo-note">
+            <span class="demo-dot"></span> Los números apartados quedan en amarillo hasta que se confirme el pago o abono
+          </p>
+
+          <div class="hero-stats">
+            <div class="hero-stat">
+              <strong id="stat-available">1000</strong>
+              <span>Disponibles</span>
+            </div>
+            <div class="hero-stat hero-stat-pending">
+              <strong id="stat-pending">0</strong>
+              <span>Apartadas</span>
+            </div>
+            <div class="hero-stat hero-stat-sold">
+              <strong id="stat-sold">0</strong>
+              <span>Vendidas</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-right">
+          <div class="carousel" id="carousel">
+            <div class="carousel-track" id="carousel-track">
+              <!-- Las imágenes se generan desde script.js -->
+            </div>
+
+            <button type="button" class="carousel-arrow carousel-prev" id="carousel-prev" aria-label="Foto anterior">‹</button>
+            <button type="button" class="carousel-arrow carousel-next" id="carousel-next" aria-label="Foto siguiente">›</button>
+
+            <div class="carousel-dots" id="carousel-dots" role="tablist" aria-label="Selector de fotos"></div>
+          </div>
+          <p class="carousel-caption">Vista previa del vehículo · Coloca las fotos en la carpeta <code>fotos/</code></p>
+        </div>
+
       </div>
-      <div class="hero-rule"></div>
-      <p class="demo-note"><span class="demo-dot"></span> Los números apartados quedan en amarillo hasta que se confirme el pago o abono</p>
+    </section>
+
+    <!-- SECCIÓN DE PREMIOS -->
+    <section class="prizes-section">
+      <p class="eyebrow">LOS PREMIOS</p>
+      <h2>Tres premios en juego</h2>
+      <p class="section-copy prizes-copy">
+        El primer premio es el vehículo. Además, hay dos premios adicionales para los siguientes números ganadores.
+      </p>
+
+      <div class="prizes-grid">
+        <article class="prize-card prize-card-first">
+          <span class="prize-badge">1er PREMIO</span>
+          <div class="prize-visual" aria-hidden="true">🚗</div>
+          <h3>El Vehículo</h3>
+          <p>El gran premio principal de esta edición especial.</p>
+        </article>
+
+        <article class="prize-card">
+          <span class="prize-badge">2do PREMIO</span>
+          <div class="prize-visual" aria-hidden="true">📱</div>
+          <h3>iPhone 18</h3>
+          <p>El último modelo, entregado sellado y con garantía.</p>
+        </article>
+
+        <article class="prize-card">
+          <span class="prize-badge">3er PREMIO</span>
+          <div class="prize-visual" aria-hidden="true">💵</div>
+          <h3>$500 USD</h3>
+          <p>Premio en efectivo entregado al número ganador.</p>
+        </article>
+      </div>
     </section>
 
     <section class="content-section" aria-labelledby="numbers-title">
@@ -124,7 +202,7 @@
         <article class="step">
           <span class="step-number">02</span>
           <h3>Aparta tus números</h3>
-          <p>Indica tu nombre y teléfono de EE.UU. Quedarán apartados en amarillo para que nadie más los tome.</p>
+          <p>Indica tu nombre y tu teléfono. Quedarán apartados en amarillo para que nadie más los tome.</p>
         </article>
         <article class="step">
           <span class="step-number">03</span>
@@ -141,7 +219,7 @@
     <p class="footer-note">Administración y atención directa por WhatsApp.</p>
   </footer>
 
-  <!-- MODAL DE DATOS DE CONTACTO (EE.UU. - 10 DÍGITOS DIRECTOS) -->
+  <!-- MODAL DE DATOS DE CONTACTO -->
   <dialog id="checkout-dialog" class="checkout-dialog">
     <div class="dialog-header">
       <div>
@@ -153,7 +231,7 @@
 
     <form id="checkout-form">
       <p class="muted">
-        Indica tu nombre y número de teléfono de Estados Unidos (10 dígitos) para contactarte en caso de resultar ganador.
+        Indica tu nombre y tu número de teléfono para contactarte en caso de resultar ganador.
       </p>
 
       <div class="checkout-summary-box">
@@ -200,13 +278,13 @@
         <label for="buyer-phone">Número de teléfono (WhatsApp)</label>
         <div class="phone-input-wrap">
           <span class="phone-prefix" id="phone-prefix">+1</span>
-          <input 
-            type="tel" 
-            id="buyer-phone" 
-            placeholder="305 123 4567" 
+          <input
+            type="tel"
+            id="buyer-phone"
+            placeholder="305 123 4567"
             maxlength="16"
             inputmode="numeric"
-            required 
+            required
             autocomplete="tel"
           >
         </div>
