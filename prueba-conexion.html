@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prueba de conexión · Rifa</title>
+  <style>
+    body {
+      margin: 0; padding: 24px; background: #101010; color: #f7f4ed;
+      font-family: system-ui, -apple-system, Arial, sans-serif; line-height: 1.5;
+    }
+    h1 { font-size: 22px; margin: 0 0 6px; color: #d7b56d; }
+    p.sub { color: #aaa69e; font-size: 13px; margin: 0 0 22px; }
+    .test {
+      border: 1px solid #34312b; background: #181818; border-radius: 12px;
+      padding: 16px 18px; margin-bottom: 12px;
+    }
+    .test h2 { font-size: 14px; margin: 0 0 6px; color: #f0d99c; }
+    .test .dato { font-size: 12px; color: #aaa69e; word-break: break-all; margin: 4px 0; }
+    .estado { font-weight: 700; font-size: 13px; padding: 3px 10px; border-radius: 99px; display: inline-block; margin-top: 8px; }
+    .ok { background: rgba(145,180,155,.16); color: #91b49b; border: 1px solid rgba(145,180,155,.4); }
+    .fail { background: rgba(224,122,122,.14); color: #e07a7a; border: 1px solid rgba(224,122,122,.4); }
+    .wait { background: rgba(234,179,8,.14); color: #eab308; border: 1px solid rgba(234,179,8,.4); }
+    .resumen { margin-top: 22px; padding: 16px 18px; border-radius: 12px; font-size: 14px; font-weight: 600; }
+    .resumen.ok { background: rgba(145,180,155,.12); border: 1px solid rgba(145,180,155,.45); color: #91b49b; }
+    .resumen.fail { background: rgba(224,122,122,.1); border: 1px solid rgba(224,122,122,.45); color: #e07a7a; }
+    pre { background: #0d0d0c; border: 1px solid #34312b; border-radius: 8px; padding: 10px; font-size: 11px; overflow-x: auto; color: #c4c0b8; }
+  </style>
+</head>
+<body>
+
+  <h1>Prueba de conexión con Supabase</h1>
+  <p class="sub">Esta página comprueba sola si tu base de datos está conectada. No hay que escribir nada.</p>
+
+  <div id="pruebas"></div>
+  <div id="resumen"></div>
+
+  <!-- Librería de Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Configuración del proyecto -->
+  <script src="supabase-config.js"></script>
+
+  <script>
+    const contenedor = document.getElementById("pruebas");
+    const resumen = document.getElementById("resumen");
+
+    function bloque(id, titulo, detalle) {
+      const div = document.createElement("div");
+      div.className = "test";
+      div.innerHTML = `<h2>${titulo}</h2><div class="dato">${detalle || "Comprobando..."}</div><span class="estado wait" id="${id}">esperando</span>`;
+      contenedor.append(div);
+      return document.getElementById(id);
+    }
+
+    function marcar(el, ok, texto) {
+      el.className = "estado " + (ok ? "ok" : "fail");
+      el.textContent = texto;
+    }
+
+    async function correr() {
+      // PRUEBA 1: ¿Se cargó la configuración?
+      const e1 = bloque("e1", "1. Configuración cargada", "Comprobando supabase-config.js...");
+      const tieneConfig = typeof SUPABASE_URL === "string" && typeof SUPABASE_KEY === "string" && SUPABASE_KEY.length > 20;
+      marcar(e1, tieneConfig, tieneConfig ? "OK" : "FALLA");
+      if (tieneConfig) {
+        e1.parentElement.querySelector(".dato").textContent =
+          "URL: " + SUPABASE_URL + "  ·  Clave: " + SUPABASE_KEY.slice(0, 18) + "...";
+      }
+
+      // PRUEBA 2: ¿Se creó el cliente?
+      const e2 = bloque("e2", "2. Cliente de Supabase", "Comprobando conexión de la librería...");
+      const tieneCliente = typeof supabaseClient === "object" && supabaseClient !== null;
+      marcar(e2, tieneCliente, tieneCliente ? "OK" : "FALLA");
+
+      if (!tieneConfig || !tieneCliente) {
+        resumen.className = "resumen fail";
+        resumen.textContent = "❌ No se pudo cargar la configuración de Supabase. Revisa que supabase-config.js esté en el repositorio.";
+        return;
+      }
+
+      // PRUEBA 3: leer la tabla numeros
+      const e3 = bloque("e3", "3. Leer el tablero (tabla numeros)", "Consultando...");
+      let lecturaOK = false;
+      try {
+        const r = await supabaseClient.from("numeros").select("numero,estado").limit(5);
+        lecturaOK = !r.error;
+        const det = r.error
+          ? "Error: " + JSON.stringify(r.error)
+          : "Leídos " + r.data.length + " números de ejemplo.";
+        e3.parentElement.querySelector(".dato").textContent = det;
+        marcar(e3, lecturaOK, lecturaOK ? "OK · 200" : "FALLA");
+      } catch (err) {
+        e3.parentElement.querySelector(".dato").textContent = "Excepción: " + err.message;
+        marcar(e3, false, "FALLA");
+      }
+
+      // PRUEBA 4: contar los 1000 números
+      const e4 = bloque("e4", "4. Total de números en la base", "Contando...");
+      try {
+        const r = await supabaseClient.from("numeros").select("numero", { count: "exact", head: true });
+        const total = r.count;
+        const ok = !r.error && total === 1000;
+        e4.parentElement.querySelector(".dato").textContent = r.error
+          ? "Error: " + JSON.stringify(r.error)
+          : "La tabla tiene " + total + " números (se esperan 1000).";
+        marcar(e4, ok, ok ? "OK · 1000" : "REVISAR");
+      } catch (err) {
+        e4.parentElement.querySelector(".dato").textContent = "Excepción: " + err.message;
+        marcar(e4, false, "FALLA");
+      }
+
+      // PRUEBA 5: escribir una solicitud de prueba
+      const e5 = bloque("e5", "5. Escribir en la base (permisos de reserva)", "Probando permiso de escritura...");
+      let escrituraOK = false;
+      try {
+        const r = await supabaseClient
+          .from("solicitudes")
+          .insert([{
+            codigo: "PRUEBA-" + Date.now().toString().slice(-6),
+            comprador: "Prueba de conexión",
+            telefono: "test",
+            telefono_digitos: "13051234567",
+            total: 30,
+            saldo: 30,
+            estado: "pendiente"
+          }])
+          .select();
+
+        escrituraOK = !r.error;
+        e5.parentElement.querySelector(".dato").textContent = r.error
+          ? "Error: " + JSON.stringify(r.error)
+          : "✅ La fila se guardó correctamente en la base de datos.";
+        marcar(e5, escrituraOK, escrituraOK ? "OK · 201" : "FALLA");
+      } catch (err) {
+        e5.parentElement.querySelector(".dato").textContent = "Excepción: " + err.message;
+        marcar(e5, false, "FALLA");
+      }
+
+      // RESUMEN
+      if (lecturaOK && escrituraOK) {
+        resumen.className = "resumen ok";
+        resumen.textContent = "✅ TODO FUNCIONA. Tu web está conectada a la base de datos: lee y escribe sin problema. Ya puedes volver a rifasjc.com y probar la sincronización.";
+      } else if (lecturaOK && !escrituraOK) {
+        resumen.className = "resumen fail";
+        resumen.innerHTML = "⚠️ LEE pero NO ESCRIBE.<br><br>La lectura funciona (las pruebas 3 y 4 dan OK), así que la URL y la clave son correctas. Lo que falla es el permiso de escritura. Manda este resultado y se corrige con el SQL de permisos.";
+      } else {
+        resumen.className = "resumen fail";
+        resumen.textContent = "❌ Ni siquiera lee. La configuración o la clave tienen un problema. Manda este resultado.";
+      }
+    }
+
+    correr();
+  </script>
+
+</body>
+</html>
