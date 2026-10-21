@@ -799,3 +799,25 @@ h2 { font-size: clamp(27px, 4vw, 38px); margin-bottom: 7px; }
   .draw-card { padding: 15px 14px; }
   .draw-prize { font-size: 18px; margin-bottom: 9px; }
 }
+.hero-title-row {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+.hero-logo {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 2px solid #A1C6EA;
+  box-shadow: 0 6px 20px rgba(30, 58, 95, .16);
+}
+.hero-title-row h1 { margin-bottom: 0; }
+
+@media (max-width: 760px) {
+  .hero-title-row { gap: 12px; }
+  .hero-logo { width: 64px; height: 64px; }
+}
+
