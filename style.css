@@ -433,12 +433,19 @@ h2 { font-size: clamp(27px, 4vw, 38px); margin-bottom: 7px; }
 
 /* VENDIDO DEFINITIVO */
 .number.sold {
-  background: #E7ECF4;
-  border-color: #D3DFF0;
-  color: #93A3BA;
-  text-decoration: line-through;
+  background: #0B0E14;      /* negro azulado */
+  border-color: #0B0E14;
+  color: transparent;       /* el número desaparece */
+  font-size: 0;
   cursor: not-allowed;
+  pointer-events: none;     /* ni se puede pulsar */
 }
+
+.number.sold::before {
+  content: "✕";             /* la marca que sustituye al número */
+  color: #4A5464;
+}
+
 
 .number:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--gold-light); outline-offset: 2px; }
 .empty-search { color: var(--muted); text-align: center; padding: 30px 0; font-size: 13px; }
