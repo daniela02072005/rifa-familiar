@@ -716,3 +716,86 @@ h2 { font-size: clamp(27px, 4vw, 38px); margin-bottom: 7px; }
   .step-number { margin-bottom: 7px; }
   .footer-note { width: 100%; margin-left: 0 !important; margin-top: 8px; }
 }
+/* ============================================================
+   FRANJA DE SORTEOS (Pick 4)
+   ============================================================ */
+.draw-strip {
+  margin: 0 0 26px;
+  padding: 26px 28px 28px;
+  background: linear-gradient(135deg, #1E3A5F 0%, #172E4D 100%);
+  border-radius: 18px;
+  box-shadow: 0 6px 20px rgba(30, 58, 95, .10);
+  position: relative;
+  overflow: hidden;
+}
+.draw-strip::after {
+  content: "";
+  position: absolute;
+  top: -60px; right: -60px;
+  width: 220px; height: 220px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(161, 198, 234, .16), transparent 70%);
+  pointer-events: none;
+}
+.draw-intro { text-align: center; margin-bottom: 22px; position: relative; z-index: 1; }
+.draw-kicker {
+  margin: 0 0 8px; color: #A1C6EA; font-size: 10px;
+  letter-spacing: .24em; font-weight: 700; text-transform: uppercase;
+}
+.draw-title {
+  margin: 0 0 8px; font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(22px, 3vw, 32px); font-weight: 500; color: #FFFFFF; line-height: 1.15;
+}
+.draw-title span { color: #A1C6EA; }
+.draw-sub {
+  margin: 0 auto; color: rgba(224, 233, 246, .78); font-size: 13px; max-width: 520px;
+}
+.draw-cards {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px; position: relative; z-index: 1;
+}
+.draw-card {
+  background: rgba(255, 255, 255, .07);
+  border: 1px solid rgba(161, 198, 234, .28);
+  border-radius: 14px; padding: 18px 16px; text-align: center;
+  transition: transform .18s ease, background .18s ease, border-color .18s ease;
+}
+.draw-card:hover {
+  transform: translateY(-3px);
+  background: rgba(255, 255, 255, .11);
+  border-color: #A1C6EA;
+}
+.draw-card-first {
+  background: rgba(161, 198, 234, .16);
+  border-color: rgba(161, 198, 234, .55);
+}
+.draw-badge {
+  display: inline-block; margin-bottom: 10px; padding: 4px 10px;
+  border-radius: 99px; background: rgba(255, 255, 255, .12);
+  border: 1px solid rgba(161, 198, 234, .35);
+  color: #A1C6EA; font-size: 9px; letter-spacing: .16em;
+  font-weight: 700; text-transform: uppercase;
+}
+.draw-card-first .draw-badge {
+  background: #A1C6EA; border-color: #A1C6EA; color: #1E3A5F;
+}
+.draw-prize {
+  margin: 0 0 12px; font-family: 'Playfair Display', Georgia, serif;
+  font-size: 20px; font-weight: 500; color: #FFFFFF;
+}
+.draw-date {
+  margin: 0; display: flex; flex-direction: column; gap: 2px;
+  padding-top: 11px; border-top: 1px solid rgba(161, 198, 234, .25);
+}
+.draw-date-label {
+  color: rgba(224, 233, 246, .62); font-size: 9px;
+  letter-spacing: .16em; text-transform: uppercase; font-weight: 700;
+}
+.draw-date strong { color: #FFFFFF; font-size: 14px; letter-spacing: .02em; }
+
+@media (max-width: 760px) {
+  .draw-strip { padding: 22px 18px 24px; }
+  .draw-cards { grid-template-columns: 1fr; gap: 10px; }
+  .draw-card { padding: 15px 14px; }
+  .draw-prize { font-size: 18px; margin-bottom: 9px; }
+}
