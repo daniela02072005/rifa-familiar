@@ -433,17 +433,12 @@ h2 { font-size: clamp(27px, 4vw, 38px); margin-bottom: 7px; }
 
 /* VENDIDO DEFINITIVO */
 .number.sold {
-  background: #0B0E14;      /* negro azulado */
+  background: #0B0E14;
   border-color: #0B0E14;
-  color: transparent;       /* el número desaparece */
-  font-size: 0;
+  color: #0B0E14;      /* mismo color que el fondo: invisible */
+  text-decoration: none;
   cursor: not-allowed;
-  pointer-events: none;     /* ni se puede pulsar */
-}
-
-.number.sold::before {
-  content: "✕";             /* la marca que sustituye al número */
-  color: #4A5464;
+  pointer-events: none;
 }
 
 
