@@ -399,7 +399,9 @@ checkoutForm.addEventListener("submit", async (e) => {
     // 1. Crear la solicitud en Supabase
     const codigo = `SOL-${Date.now().toString().slice(-6)}`;
 
-    const { data: solicitud, error: errSol } = await supabaseClient
+    // Sin .select(): insertamos sin pedir la fila de vuelta, así la web
+    // pública no necesita permiso de lectura sobre la tabla solicitudes.
+    const { error: errSol } = await supabaseClient
       .from("solicitudes")
       .insert([{
         codigo,
@@ -413,16 +415,16 @@ checkoutForm.addEventListener("submit", async (e) => {
         saldo: total,
         estado: "pendiente",
         notas: ""
-      }])
-      .select()
-      .single();
+      }]);
 
     if (errSol) throw errSol;
 
-    // 2. Marcar los números como apartados en la base de datos
+    // 2. Marcar los números como apartados en la base de datos.
+    // El vínculo con la solicitud lo deja el código (codigo), que la
+    // administradora usará para localizarla en el panel.
     const { error: errNum } = await supabaseClient
       .from("numeros")
-      .update({ estado: "apartado", solicitud_id: solicitud.id })
+      .update({ estado: "apartado" })
       .in("numero", numbers)
       .eq("estado", "disponible");
 
