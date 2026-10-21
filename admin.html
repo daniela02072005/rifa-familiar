@@ -5,35 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Administración | Rifa Familiar</title>
     <link rel="stylesheet" href="admin.css">
-
-    <!-- Librería de Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-    <!-- Configuración: URL y clave pública del proyecto -->
     <script src="supabase-config.js"></script>
-
-    <!-- Lógica del panel -->
-    <script src="/admin.js" defer></script>
+    <script src="admin.js" defer></script>
 </head>
 <body>
 
-    <!-- ACCESO DE ADMINISTRACIÓN -->
+    <!-- ACCESO DE DEMOSTRACIÓN -->
     <section id="login-screen" class="login-screen">
         <div class="login-card">
             <div class="brand-icon">R</div>
             <p class="eyebrow">RIFA FAMILIAR</p>
             <h1>Panel de Control</h1>
             <p class="muted">
-                Acceso para la gestión de solicitudes, abonos y ventas.
+                Acceso exclusivo para la gestión de solicitudes, abonos y ventas.
             </p>
 
             <form id="login-form">
-                <label for="username">Correo de administradora</label>
+                <label for="email">Correo de administración</label>
                 <input
                     type="email"
-                    id="username"
+                    id="email"
                     placeholder="correo@ejemplo.com"
-                    autocomplete="username"
+                    autocomplete="email"
                     required
                 >
 
@@ -54,7 +48,7 @@
             </form>
 
             <p class="demo-note">
-                Acceso restringido al personal de administración.
+                Acceso restringido. Solo las cuentas autorizadas pueden gestionar la rifa.
             </p>
         </div>
     </section>
@@ -72,7 +66,7 @@
             </a>
 
             <div class="topbar-right">
-                <span class="admin-badge">ADMINISTRADORA</span>
+                <span class="admin-badge" id="admin-name">ADMINISTRADORA</span>
                 <button id="logout-button" class="button button-outline">
                     Cerrar sesión
                 </button>
@@ -88,7 +82,7 @@
                 </p>
             </div>
 
-            <div class="demo-label">SISTEMA ACTIVO</div>
+            <div class="demo-label" id="admin-email-label">CONECTADO</div>
         </section>
 
         <!-- RESUMEN DE MÉTRICAS -->
@@ -153,10 +147,10 @@
 
                 <select id="status-filter" aria-label="Filtrar por estado">
                     <option value="all">Todos los estados</option>
-                    <option value="pendiente">En revisión (Amarillo)</option>
-                    <option value="plazos">A plazos / Con abono</option>
-                    <option value="pagado">Pagado completo (Vendido)</option>
-                    <option value="rechazado">Rechazadas / Liberadas</option>
+                    <option value="pending">En revisión (Amarillo)</option>
+                    <option value="partial">A plazos / Con abono</option>
+                    <option value="approved">Pagado completo (Vendido)</option>
+                    <option value="rejected">Rechazadas / Liberadas</option>
                 </select>
             </div>
 
@@ -193,7 +187,7 @@
 
     </main>
 
-    <!-- VENTANA MODAL PARA GESTIÓN DE PAGO -->
+    <!-- VENTANA MODAL PARA GESTIÓN DE PAGO (COMPLETO O EN PLAZOS) -->
     <dialog id="details-dialog" class="details-dialog">
         <div class="dialog-header">
             <div>
