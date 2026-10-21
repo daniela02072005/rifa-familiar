@@ -173,17 +173,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Reconstruye la lista de números de una solicitud leyendo la tabla numeros
-  // (los números apartados/vendidos que apuntan a esa solicitud por código).
+  // Lee los números de la solicitud desde la columna propia.
+  // Si la solicitud es antigua y no tiene columna, intenta leerlos de las notas.
   function numerosDeSolicitud(sol) {
-    // Método directo: si algún número guarda la solicitud, los listamos.
-    const directos = Object.keys(numerosMap)
-      .filter(n => numerosMap[n] && false) // reservado para vínculo futuro por solicitud_id
-      .map(Number);
+    if (Array.isArray(sol.numeros) && sol.numeros.length) {
+      return sol.numeros.map(Number).filter(n => !isNaN(n));
+    }
 
-    if (directos.length) return directos;
-
-    // Método por notas: guardamos los números en las notas al apartar.
     const match = (sol.notas || "").match(/Números:\s*([0-9,\s]+)/i);
     if (match) {
       return match[1].split(",").map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n));
