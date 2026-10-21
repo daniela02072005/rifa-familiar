@@ -1,19 +1,51 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap');
 
+
 :root {
-  --bg: #101010;
-  --panel: #181818;
-  --text: #f7f4ed;
-  --muted: #aaa69e;
-  --gold: #d7b56d;
-  --gold-light: #f0d99c;
-  --line: #34312b;
-  --green: #91b49b;
-  --amber: #eab308;
-  --amber-dark: #854d0e;
-  --amber-bg: rgba(234, 179, 8, 0.14);
-  --sold: #3c3b39;
+  /* Paleta base */
+  --white: #FFFFFF;
+  --ice: #E0E9F6;
+  --sky: #A1C6EA;
+  --blue: #3E68A3;
+  --ink: #04080F;
+
+  /* Derivados con transparencia */
+  --blue-soft: rgba(62, 104, 163, 0.10);
+  --blue-line: rgba(62, 104, 163, 0.22);
+  --ink-soft: rgba(4, 8, 15, 0.06);
+
+  /* Papeles del sistema */
+  --bg: #FFFFFF;
+  --bg-alt: #E0E9F6;
+  --panel: #FFFFFF;
+  --panel-soft: #F4F8FD;
+
+  /* Tinta */
+  --text: #04080F;
+  --muted: #5A6B85;
+  --muted-light: #8C9DB5;
+
+  /* Líneas */
+  --line: #D3DFF0;
+  --line-strong: #A1C6EA;
+
+  /* Acentos */
+  --accent: #3E68A3;
+  --accent-dark: #2E4F7D;
+  --accent-light: #A1C6EA;
+  --green: #3E68A3;
+  --amber: #3E68A3;
+  --amber-bg: rgba(161, 198, 234, 0.30);
+  --sold: #C8D3E3;
+
+  /* Compatibilidad con nombres antiguos */
+  --gold: #3E68A3;
+  --gold-light: #A1C6EA;
+
   --radius: 18px;
+  --shadow-sm: 0 1px 2px rgba(4, 8, 15, 0.05);
+  --shadow: 0 4px 16px rgba(62, 104, 163, 0.10);
+  --shadow-lg: 0 12px 40px rgba(4, 8, 15, 0.12);
 }
 
 * { box-sizing: border-box; }
@@ -36,7 +68,7 @@ button, input, select { font: inherit; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid #292722;
+  border-bottom: 1px solid #D3DFF0;
 }
 .brand {
   display: inline-flex;
@@ -65,7 +97,7 @@ button, input, select { font: inherit; }
 /* HERO EN DOS COLUMNAS */
 .hero {
   padding: 64px 24px 60px;
-  background: radial-gradient(ellipse at 25% 0%, rgba(215, 181, 109, .10), transparent 58%), var(--bg);
+  background: radial-gradient(ellipse at 25% 0%, rgba(62, 104, 163, .08), transparent 58%), var(--bg);
 }
 .hero-grid {
   max-width: 1180px;
@@ -112,8 +144,8 @@ h1 span { color: var(--gold-light); }
   align-items: center;
   gap: 14px;
   padding: 14px 22px;
-  background: rgba(215, 181, 109, .07);
-  border: 1px solid rgba(215, 181, 109, .3);
+  background: rgba(62, 104, 163, .06);
+  border: 1px solid rgba(62, 104, 163, .25);
   border-radius: 14px;
 }
 .ticket-icon { font-size: 30px; line-height: 1; }
@@ -121,6 +153,33 @@ h1 span { color: var(--gold-light); }
 .price-label, .summary-label { color: var(--muted); font-size: 9px; letter-spacing: .2em; font-weight: 700; }
 .price { font-family: 'Playfair Display', Georgia, serif; color: var(--gold-light); font-size: 30px; line-height: 1.1; }
 .price small, .total-value small { font-family: 'DM Sans', Arial, sans-serif; font-size: 11px; letter-spacing: .1em; }
+
+/* PROMOCIONES JUNTO AL PRECIO */
+.hero-promos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+.hero-promo {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 13px;
+  background: #F4F8FD;
+  border: 1px dashed rgba(161, 198, 234, .85);
+  border-radius: 99px;
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.hero-promo strong {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--gold-light);
+}
+
 .hero-rule { width: 45px; height: 1px; background: var(--gold); margin: 24px 0 17px; opacity: .7; }
 .demo-note { color: var(--muted); font-size: 11px; margin: 0; }
 .demo-dot, .status-dot { display: inline-block; width: 6px; height: 6px; background: var(--gold); border-radius: 50%; margin-right: 7px; vertical-align: 1px; }
@@ -166,8 +225,8 @@ h1 span { color: var(--gold-light); }
   border-radius: var(--radius);
   overflow: hidden;
   border: 1px solid var(--line);
-  background: #0d0d0c;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, .55);
+  background: #E0E9F6;
+  box-shadow: var(--shadow-lg);
 }
 .carousel-track {
   position: relative;
@@ -194,14 +253,14 @@ h1 span { color: var(--gold-light); }
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  color: #77736c;
+  color: #8C9DB5;
   font-size: 11px;
   text-align: center;
   padding: 20px;
 }
 .slide-placeholder span { font-size: 34px; opacity: .6; }
 .slide-placeholder code {
-  background: #1b1b1b;
+  background: #F4F8FD;
   border: 1px solid var(--line);
   border-radius: 4px;
   padding: 1px 5px;
@@ -217,7 +276,7 @@ h1 span { color: var(--gold-light); }
   display: grid;
   place-items: center;
   background: rgba(16, 16, 16, .68);
-  border: 1px solid rgba(215, 181, 109, .45);
+  border: 1px solid rgba(161, 198, 234, .85);
   color: var(--gold-light);
   border-radius: 50%;
   font-size: 22px;
@@ -226,7 +285,7 @@ h1 span { color: var(--gold-light); }
   transition: background .2s, border-color .2s;
   z-index: 2;
 }
-.carousel-arrow:hover { background: rgba(215, 181, 109, .18); border-color: var(--gold); }
+.carousel-arrow:hover { background: rgba(62, 104, 163, .12); border-color: var(--gold); }
 .carousel-prev { left: 12px; }
 .carousel-next { right: 12px; }
 .carousel-dots {
@@ -243,16 +302,16 @@ h1 span { color: var(--gold-light); }
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  border: 1px solid rgba(215, 181, 109, .7);
+  border: 1px solid rgba(62, 104, 163, .55);
   background: transparent;
   cursor: pointer;
   padding: 0;
   transition: background .2s, transform .2s;
 }
 .carousel-dot.active { background: var(--gold); transform: scale(1.25); }
-.carousel-caption { margin: 12px 0 0; text-align: center; font-size: 10px; color: #77736c; }
+.carousel-caption { margin: 12px 0 0; text-align: center; font-size: 10px; color: #8C9DB5; }
 .carousel-caption code {
-  background: #1b1b1b;
+  background: #F4F8FD;
   border: 1px solid var(--line);
   border-radius: 4px;
   padding: 1px 5px;
@@ -281,15 +340,15 @@ h1 span { color: var(--gold-light); }
   text-align: center;
 }
 .prize-card-first {
-  border-color: rgba(215, 181, 109, .5);
-  background: radial-gradient(circle at 50% 0%, rgba(215, 181, 109, .13), transparent 68%), var(--panel);
+  border-color: rgba(161, 198, 234, .75);
+  background: radial-gradient(circle at 50% 0%, rgba(62, 104, 163, .10), transparent 68%), var(--panel);
 }
 .prize-badge {
   display: inline-block;
   margin-bottom: 14px;
   padding: 4px 11px;
-  background: rgba(215, 181, 109, .14);
-  border: 1px solid rgba(215, 181, 109, .38);
+  background: rgba(62, 104, 163, .10);
+  border: 1px solid rgba(62, 104, 163, .30);
   border-radius: 99px;
   color: var(--gold-light);
   font-size: 9px;
@@ -316,10 +375,10 @@ h2 { font-size: clamp(27px, 4vw, 38px); margin-bottom: 7px; }
 .availability .status-dot { background: var(--green); }
 
 /* LEYENDA */
-.legend { display: flex; flex-wrap: wrap; gap: 18px; margin-bottom: 18px; color: #c4c0b8; font-size: 11px; }
+.legend { display: flex; flex-wrap: wrap; gap: 18px; margin-bottom: 18px; color: #5A6B85; font-size: 11px; }
 .legend span { display: inline-flex; align-items: center; gap: 7px; }
 .legend-box { display: inline-block; width: 12px; height: 12px; border: 1px solid #555; border-radius: 3px; }
-.legend-box.available { background: #1b1b1b; border-color: #37342e; }
+.legend-box.available { background: #F4F8FD; border-color: #D3DFF0; }
 .legend-box.selected { background: var(--gold); border-color: var(--gold); }
 .legend-box.pending { background: var(--amber-dark); border-color: var(--amber); }
 .legend-box.sold { background: var(--sold); border-color: var(--sold); }
@@ -329,7 +388,7 @@ h2 { font-size: clamp(27px, 4vw, 38px); margin-bottom: 7px; }
 .search-box { display: flex; align-items: center; gap: 9px; width: min(260px, 100%); padding: 9px 12px; background: var(--panel); border: 1px solid var(--line); border-radius: 9px; color: var(--muted); }
 .search-box span { font-size: 22px; line-height: 1; }
 .search-box input { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--text); font-size: 12px; }
-.search-box input::placeholder { color: #77736c; }
+.search-box input::placeholder { color: #8C9DB5; }
 .text-button { border: 0; background: transparent; color: var(--gold-light); cursor: pointer; font-size: 11px; }
 .text-button:hover { text-decoration: underline; }
 
@@ -338,10 +397,10 @@ h2 { font-size: clamp(27px, 4vw, 38px); margin-bottom: 7px; }
 .number {
   min-width: 0;
   padding: 10px 2px;
-  border: 1px solid #37342e;
+  border: 1px solid #D3DFF0;
   border-radius: 7px;
-  background: #1b1b1b;
-  color: #e5e0d6;
+  background: #F4F8FD;
+  color: #04080F;
   font-size: 11px;
   cursor: pointer;
   transition: background .15s, border-color .15s, color .15s, transform .15s;
@@ -350,17 +409,17 @@ h2 { font-size: clamp(27px, 4vw, 38px); margin-bottom: 7px; }
 
 /* SELECCIONADO POR EL USUARIO */
 .number.selected {
-  background: var(--gold);
-  color: #18140d;
-  border-color: var(--gold);
+  background: var(--accent);
+  color: #FFFFFF;
+  border-color: var(--accent);
   font-weight: 700;
 }
 
 /* APARTADO / EN REVISIÓN / A PLAZOS (AMARILLO) */
 .number.pending {
-  background: #2a220a;
-  border: 1px solid var(--amber);
-  color: var(--amber);
+  background: #E0E9F6;
+  border: 1px solid var(--accent);
+  color: var(--accent-dark);
   font-weight: 700;
   cursor: not-allowed;
 }
@@ -368,9 +427,9 @@ h2 { font-size: clamp(27px, 4vw, 38px); margin-bottom: 7px; }
 
 /* VENDIDO DEFINITIVO */
 .number.sold {
-  background: var(--sold);
-  border-color: var(--sold);
-  color: #77736d;
+  background: #E7ECF4;
+  border-color: #D3DFF0;
+  color: #93A3BA;
   text-decoration: line-through;
   cursor: not-allowed;
 }
@@ -477,19 +536,19 @@ h2 { font-size: clamp(27px, 4vw, 38px); margin-bottom: 7px; }
   align-items: center;
   gap: 3px;
   padding: 14px 10px;
-  background: #1b1b1b;
-  border: 1px solid #37342e;
+  background: #F4F8FD;
+  border: 1px solid #D3DFF0;
   border-radius: 10px;
   text-align: center;
 }
 .promo-card-best {
   border-color: var(--gold);
-  background: radial-gradient(circle at 50% 0%, rgba(215, 181, 109, .12), transparent 70%), #1b1b1b;
+  background: radial-gradient(circle at 50% 0%, rgba(62, 104, 163, .10), transparent 70%), #F4F8FD;
 }
 .promo-qty { font-size: 10px; letter-spacing: .12em; color: var(--muted); text-transform: uppercase; }
 .promo-price { font-family: 'Playfair Display', Georgia, serif; font-size: 24px; color: var(--gold-light); font-weight: 500; }
 .promo-save { font-size: 10px; color: var(--green); font-weight: 700; letter-spacing: .06em; }
-.promo-note { margin: 14px 0 0; font-size: 10px; color: #77736c; text-align: center; }
+.promo-note { margin: 14px 0 0; font-size: 10px; color: #8C9DB5; text-align: center; }
 
 .primary-button {
   display: flex;
@@ -499,24 +558,24 @@ h2 { font-size: clamp(27px, 4vw, 38px); margin-bottom: 7px; }
   width: 100%;
   margin-top: 13px;
   padding: 15px 20px;
-  background: var(--gold);
-  color: #18140d;
-  border: 1px solid var(--gold);
+  background: var(--accent);
+  color: #FFFFFF;
+  border: 1px solid var(--accent);
   border-radius: 9px;
   font-weight: 700;
   font-size: 13px;
   cursor: pointer;
 }
-.primary-button:disabled { background: #34312b; border-color: #34312b; color: #858078; cursor: not-allowed; }
+.primary-button:disabled { background: #D3DFF0; border-color: #D3DFF0; color: #8C9DB5; cursor: not-allowed; }
 .primary-button:not(:disabled):hover { background: var(--gold-light); }
-.fine-print { max-width: 620px; margin: 13px auto 0; text-align: center; color: #827e76; font-size: 11px; }
+.fine-print { max-width: 620px; margin: 13px auto 0; text-align: center; color: #8C9DB5; font-size: 11px; }
 
 /* SECCIÓN PASOS */
-.how-it-works { padding: 58px max(28px, calc((100% - 990px)/2)); background: #171715; border-top: 1px solid #2b2924; border-bottom: 1px solid #2b2924; }
+.how-it-works { padding: 58px max(28px, calc((100% - 990px)/2)); background: #E0E9F6; border-top: 1px solid #D3DFF0; border-bottom: 1px solid #D3DFF0; }
 .how-it-works > .eyebrow { margin-bottom: 8px; }
 .how-it-works h2 { margin-bottom: 28px; }
 .steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; }
-.step { padding-top: 17px; border-top: 1px solid #484133; }
+.step { padding-top: 17px; border-top: 1px solid #A1C6EA; }
 .step-number { display: block; margin-bottom: 16px; color: var(--gold); font-family: 'Playfair Display', Georgia, serif; font-size: 22px; }
 .step h3 { margin-bottom: 7px; font-size: 14px; }
 .step p { margin: 0; color: var(--muted); font-size: 12px; }
@@ -525,7 +584,7 @@ h2 { font-size: clamp(27px, 4vw, 38px); margin-bottom: 7px; }
 .site-footer { max-width: 1180px; margin: 0 auto; padding: 27px 28px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; color: var(--muted); font-size: 11px; }
 .site-footer p { margin: 0; }
 .site-footer p span { color: var(--gold); padding: 0 5px; }
-.footer-note { margin-left: auto !important; font-size: 10px; color: #77736c; }
+.footer-note { margin-left: auto !important; font-size: 10px; color: #8C9DB5; }
 
 /* MODAL DE RESERVA / CHECKOUT */
 .checkout-dialog {
@@ -544,7 +603,7 @@ h2 { font-size: clamp(27px, 4vw, 38px); margin-bottom: 7px; }
 .close-button:hover { color: var(--text); }
 
 .checkout-summary-box {
-  background: #111;
+  background: #FFFFFF;
   border: 1px solid var(--line);
   border-radius: 9px;
   padding: 12px 14px;
@@ -561,7 +620,7 @@ h2 { font-size: clamp(27px, 4vw, 38px); margin-bottom: 7px; }
 .form-group label { font-size: 10px; font-weight: 700; letter-spacing: 0.12em; color: var(--muted); text-transform: uppercase; }
 .form-group input, .form-group select {
   padding: 11px 13px;
-  background: #111;
+  background: #FFFFFF;
   border: 1px solid var(--line);
   border-radius: 8px;
   color: var(--text);
@@ -575,7 +634,7 @@ h2 { font-size: clamp(27px, 4vw, 38px); margin-bottom: 7px; }
 .phone-input-wrap {
   display: flex;
   align-items: center;
-  background: #111;
+  background: #FFFFFF;
   border: 1px solid var(--line);
   border-radius: 8px;
   overflow: hidden;
@@ -586,7 +645,7 @@ h2 { font-size: clamp(27px, 4vw, 38px); margin-bottom: 7px; }
 }
 .phone-prefix {
   padding: 11px 13px;
-  background: #1b1b1b;
+  background: #F4F8FD;
   border-right: 1px solid var(--line);
   color: var(--gold-light);
   font-weight: 700;
