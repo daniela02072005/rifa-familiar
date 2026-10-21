@@ -4,8 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#101010">
-  <title>Rifa Fin de Año | Elige tus números</title>
+  <title>Rifa Familiar | Elige tus números</title>
   <link rel="stylesheet" href="style.css">
+
+  <!-- Librería de Supabase (necesaria para conectar la web con la base de datos) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Configuración: URL y clave pública del proyecto -->
+  <script src="supabase-config.js"></script>
+
+  <!-- Lógica de la página -->
   <script src="script.js" defer></script>
 </head>
 <body>
@@ -13,7 +21,7 @@
   <header class="site-header">
     <a class="brand" href="#">
       <span class="brand-mark">RF</span>
-      <span>RIFA <strong>FIN DE AÑO</strong></span>
+      <span>RIFA <strong>FAMILIAR</strong></span>
     </a>
     <span class="header-tag">EDICIÓN ESPECIAL VEHÍCULO</span>
   </header>
@@ -36,6 +44,13 @@
               <span class="price-label">PRECIO POR BOLETA</span>
               <span class="price">1 BOLETA = $30 <small>USD</small></span>
             </div>
+          </div>
+
+          <!-- PROMOCIONES VISIBLES JUNTO AL PRECIO -->
+          <div class="hero-promos">
+            <span class="hero-promo">5 boletas <strong>$130</strong></span>
+            <span class="hero-promo">10 boletas <strong>$250</strong></span>
+            <span class="hero-promo">50 boletas <strong>$1200</strong></span>
           </div>
 
           <div class="hero-rule"></div>
@@ -71,6 +86,7 @@
 
             <div class="carousel-dots" id="carousel-dots" role="tablist" aria-label="Selector de fotos"></div>
           </div>
+          <p class="carousel-caption">Vista previa del vehículo · Coloca las fotos en la carpeta <code>fotos/</code></p>
         </div>
 
       </div>
