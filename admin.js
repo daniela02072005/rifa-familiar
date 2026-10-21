@@ -597,12 +597,12 @@ document.addEventListener("DOMContentLoaded", () => {
         renderAll();
 
         const waMsgAbono =
-          `📑 *RECIBO DE ABONO - RIFA FAMILIAR* 📑\n\n` +
+          ` *RECIBO DE ABONO - RIFA FIN DE AÑO* \n\n` +
           `Hola *${sol.comprador}*, registramos tu abono de *${money(abonoValor)} USD* de la solicitud *#${sol.codigo}*.\n\n` +
-          `🎟 *Boletas apartadas:* ${numsFmt.join(", ")}\n` +
-          `💵 *Total abonado:* ${money(nuevoAbonado)} USD\n` +
-          `⏳ *Saldo pendiente:* ${money(nuevoSaldo)} USD\n\n` +
-          `${notaTexto ? `📌 *Acuerdo:* ${notaTexto}\n\n` : ""}` +
+          `- *Boletas apartadas:* ${numsFmt.join(", ")}\n` +
+          `- *Total abonado:* ${money(nuevoAbonado)} USD\n` +
+          `- *Saldo pendiente:* ${money(nuevoSaldo)} USD\n\n` +
+          `${notaTexto ? `= *Acuerdo:* ${notaTexto}\n\n` : ""}` +
           `Tus números siguen apartados y protegidos a tu nombre. ¡Gracias!`;
 
         detailsContent.innerHTML = `
