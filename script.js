@@ -5,6 +5,18 @@ const TOTAL_NUMBERS = 1000; // Numeración del 000 al 999
 // Ejemplo EE. UU. (305) 123-4567 -> "13051234567"
 const ADMIN_WHATSAPP_PHONE = "13050000000";
 
+// Fotos del carrusel del vehículo.
+// Coloca tus imágenes en una carpeta llamada "fotos" junto a estos archivos
+// con estos nombres exactos, o cambia aquí las rutas.
+const CAROUSEL_IMAGES = [
+  { src: "fotos/carro-1.jpg", alt: "Vista frontal del vehículo" },
+  { src: "fotos/carro-2.jpg", alt: "Vista lateral del vehículo" },
+  { src: "fotos/carro-3.jpg", alt: "Interior del vehículo" },
+  { src: "fotos/carro-4.jpg", alt: "Detalle del frente del vehículo" }
+];
+
+const CAROUSEL_INTERVAL = 4000; // milisegundos entre fotos
+
 const STORAGE_KEYS = {
   SOLD_NUMBERS: "rifa_sold_v3",
   PENDING_NUMBERS: "rifa_pending_v3",
@@ -13,14 +25,12 @@ const STORAGE_KEYS = {
 
 // ---------- UTILIDADES DE TELÉFONO ----------
 
-// Une el código de país con el número local -> número internacional para WhatsApp
 function buildInternational(countryCode, localNumber) {
   const code = String(countryCode || "").replace(/\D/g, "");
   const local = String(localNumber || "").replace(/\D/g, "");
   return `${code}${local}`;
 }
 
-// Formato bonito para mostrar y guardar: +1 (305) 123-4567 / +52 5512 3456 78
 function formatPhoneDisplay(countryCode, localNumber) {
   const code = String(countryCode || "").replace(/\D/g, "");
   const local = String(localNumber || "").replace(/\D/g, "");
@@ -33,9 +43,9 @@ function formatPhoneDisplay(countryCode, localNumber) {
   return `+${code} ${groups.join(" ")}`;
 }
 
-// ---------- ALMACENAMIENTO (localStorage) ----------
+// ---------- ALMACENAMIENTO ----------
 
-// Números vendidos definitivamente (gris tachado)
+// Números vendidos definitivamente
 function getSoldNumbers() {
   const saved = localStorage.getItem(STORAGE_KEYS.SOLD_NUMBERS);
   if (saved) return new Set(JSON.parse(saved));
@@ -43,7 +53,7 @@ function getSoldNumbers() {
   return new Set([]);
 }
 
-// Números apartados / en revisión / a plazos (AMARILLO)
+// Números apartados / en revisión / a plazos
 function getPendingNumbers() {
   const saved = localStorage.getItem(STORAGE_KEYS.PENDING_NUMBERS);
   if (saved) return new Set(JSON.parse(saved));
@@ -64,6 +74,11 @@ const totalOutput = document.querySelector("#selection-total");
 const whatsappButton = document.querySelector("#whatsapp-button");
 const emptySearch = document.querySelector("#empty-search");
 
+// Estadísticas del hero
+const statAvailable = document.querySelector("#stat-available");
+const statPending = document.querySelector("#stat-pending");
+const statSold = document.querySelector("#stat-sold");
+
 // Modal de reserva
 const checkoutDialog = document.querySelector("#checkout-dialog");
 const closeCheckoutBtn = document.querySelector("#close-checkout");
@@ -83,6 +98,104 @@ function formatNumber(number) {
   return String(number).padStart(3, "0");
 }
 
+// ---------- CONTADOR DE DISPONIBLES ----------
+
+function updateAvailabilityStats() {
+  const sold = getSoldNumbers();
+  const pending = getPendingNumbers();
+
+  const totalOcupados = new Set([...sold, ...pending]).size;
+  const disponibles = TOTAL_NUMBERS - totalOcupados;
+
+  if (statAvailable) statAvailable.textContent = disponibles.toLocaleString("es-ES");
+  if (statPending) statPending.textContent = pending.size.toLocaleString("es-ES");
+  if (statSold) statSold.textContent = sold.size.toLocaleString("es-ES");
+}
+
+// ---------- CARRUSEL DE FOTOS ----------
+
+let carouselIndex = 0;
+let carouselTimer = null;
+
+function initCarousel() {
+  const track = document.querySelector("#carousel-track");
+  const dotsWrap = document.querySelector("#carousel-dots");
+  const prevBtn = document.querySelector("#carousel-prev");
+  const nextBtn = document.querySelector("#carousel-next");
+  const carousel = document.querySelector("#carousel");
+  if (!track || !dotsWrap) return;
+
+  track.innerHTML = "";
+  dotsWrap.innerHTML = "";
+
+  CAROUSEL_IMAGES.forEach((img, i) => {
+    const figure = document.createElement("div");
+    figure.className = "carousel-slide" + (i === 0 ? " active" : "");
+
+    const image = document.createElement("img");
+    image.src = img.src;
+    image.alt = img.alt;
+    image.loading = i === 0 ? "eager" : "lazy";
+
+    // Si la foto todavía no existe, mostramos un marcador discreto
+    image.addEventListener("error", () => {
+      figure.classList.add("slide-missing");
+      image.style.display = "none";
+      if (!figure.querySelector(".slide-placeholder")) {
+        const ph = document.createElement("div");
+        ph.className = "slide-placeholder";
+        ph.innerHTML = `<span>📷</span><small>Coloca <code>${img.src}</code></small>`;
+        figure.append(ph);
+      }
+    });
+
+    figure.append(image);
+    track.append(figure);
+
+    const dot = document.createElement("button");
+    dot.type = "button";
+    dot.className = "carousel-dot" + (i === 0 ? " active" : "");
+    dot.setAttribute("aria-label", `Ir a la foto ${i + 1}`);
+    dot.addEventListener("click", () => goToSlide(i));
+    dotsWrap.append(dot);
+  });
+
+  function goToSlide(index) {
+    carouselIndex = (index + CAROUSEL_IMAGES.length) % CAROUSEL_IMAGES.length;
+    track.querySelectorAll(".carousel-slide").forEach((slide, i) => {
+      slide.classList.toggle("active", i === carouselIndex);
+    });
+    dotsWrap.querySelectorAll(".carousel-dot").forEach((dot, i) => {
+      dot.classList.toggle("active", i === carouselIndex);
+    });
+  }
+
+  function nextSlide() { goToSlide(carouselIndex + 1); }
+
+  function startAuto() {
+    stopAuto();
+    carouselTimer = setInterval(nextSlide, CAROUSEL_INTERVAL);
+  }
+
+  function stopAuto() {
+    if (carouselTimer) clearInterval(carouselTimer);
+    carouselTimer = null;
+  }
+
+  nextBtn?.addEventListener("click", () => { nextSlide(); startAuto(); });
+  prevBtn?.addEventListener("click", () => { goToSlide(carouselIndex - 1); startAuto(); });
+
+  // Se pausa al pasar el ratón por encima
+  carousel?.addEventListener("mouseenter", stopAuto);
+  carousel?.addEventListener("mouseleave", startAuto);
+
+  // Pausa también en móvil mientras se toca
+  carousel?.addEventListener("touchstart", stopAuto, { passive: true });
+  carousel?.addEventListener("touchend", startAuto, { passive: true });
+
+  startAuto();
+}
+
 // ---------- SELECTOR DE PAÍS ----------
 
 function getCountryCode() {
@@ -94,7 +207,6 @@ function getExpectedDigits() {
   return parseInt(opt.dataset.digits || "10", 10);
 }
 
-// Sincroniza el prefijo visible y el texto de ayuda con el país elegido
 function syncPrefix() {
   if (phonePrefixEl) phonePrefixEl.textContent = `+${getCountryCode()}`;
   if (phoneHelp) {
@@ -109,7 +221,6 @@ buyerCountrySelect.addEventListener("change", () => {
   buyerPhoneInput.focus();
 });
 
-// Solo dígitos, con aviso en vivo de cuántos faltan
 buyerPhoneInput.addEventListener("input", () => {
   const max = getExpectedDigits();
   const digits = buyerPhoneInput.value.replace(/\D/g, "").slice(0, max);
@@ -155,19 +266,16 @@ function renderNumbers(filter = "") {
     button.setAttribute("aria-label", `Número ${formatted}`);
 
     if (soldNumbers.has(number)) {
-      // VENDIDO DEFINITIVO
       button.classList.add("sold");
       button.disabled = true;
       button.title = "Número vendido definitivamente";
       selectedNumbers.delete(number);
     } else if (pendingNumbers.has(number)) {
-      // APARTADO / EN REVISIÓN / A PLAZOS (AMARILLO)
       button.classList.add("pending");
       button.disabled = true;
       button.title = "Número apartado en revisión o abono a plazos";
       selectedNumbers.delete(number);
     } else {
-      // DISPONIBLE
       button.setAttribute("aria-pressed", "false");
       button.addEventListener("click", () => toggleNumber(number));
     }
@@ -182,6 +290,7 @@ function renderNumbers(filter = "") {
   }
 
   emptySearch.hidden = visibleCount !== 0;
+  updateAvailabilityStats();
 }
 
 function toggleNumber(number) {
@@ -208,29 +317,18 @@ const PROMO_PRICES = {
   50: 1200
 };
 
-// Escalones ordenados para mostrar avisos y sugerencias
-const PROMO_TIERS = [
-  { qty: 5, total: 130 },
-  { qty: 10, total: 250 },
-  { qty: 50, total: 1200 }
-];
-
-// Precio total según la cantidad de boletas elegidas
 function getTotalPrice(count) {
   if (PROMO_PRICES[count] !== undefined) return PROMO_PRICES[count];
   return count * PRICE_PER_NUMBER;
 }
 
-// Ahorro conseguido frente al precio normal ($30 por boleta)
 function getSaving(count) {
   return count * PRICE_PER_NUMBER - getTotalPrice(count);
 }
 
-// Devuelve el próximo escalón de descuento que aún no se ha alcanzado
 function getNextTier(count) {
   if (count >= 50) return null;
   if (count >= 10) return { qty: 50, total: 1200 };
-  if (count > 5) return { qty: 10, total: 250 };
   if (count >= 5) return { qty: 10, total: 250 };
   return { qty: 5, total: 130 };
 }
@@ -315,14 +413,12 @@ checkoutForm.addEventListener("submit", (e) => {
   const expected = getExpectedDigits();
   const localDigits = buyerPhoneInput.value.replace(/\D/g, "");
 
-  // Validación por país: el número local debe tener los dígitos esperados
   if (localDigits.length !== expected) {
     alert(`El número debe tener ${expected} dígitos para el país seleccionado (+${countryCode}).\nAhora escribiste ${localDigits.length}.`);
     buyerPhoneInput.focus();
     return;
   }
 
-  // Número internacional final para WhatsApp, guardado y mostrado
   const cleanPhone = buildInternational(countryCode, localDigits);
   const displayPhone = formatPhoneDisplay(countryCode, localDigits);
 
@@ -346,7 +442,7 @@ checkoutForm.addEventListener("submit", (e) => {
     amount: total,
     paidAmount: 0,
     remainingAmount: total,
-    status: "pending", // pending (amarillo) | partial (plazos) | approved (vendido) | rejected
+    status: "pending",
     notes: "",
     createdAt: new Date().toLocaleDateString("es-ES")
   };
@@ -354,7 +450,7 @@ checkoutForm.addEventListener("submit", (e) => {
   requests.unshift(newRequest);
   localStorage.setItem(STORAGE_KEYS.REQUESTS, JSON.stringify(requests));
 
-  // Los números pasan a AMARILLO de inmediato
+  // Los números pasan a apartado de inmediato
   const pSet = getPendingNumbers();
   numbers.forEach(n => pSet.add(n));
   localStorage.setItem(STORAGE_KEYS.PENDING_NUMBERS, JSON.stringify([...pSet]));
@@ -366,7 +462,6 @@ checkoutForm.addEventListener("submit", (e) => {
   renderNumbers(searchInput.value);
   updateSummary();
 
-  // Abrir WhatsApp con el mensaje ya redactado
   const formattedNumbers = numbers.map(formatNumber).join(", ");
   const message = `¡Hola! Acabo de apartar mis números en la web para la Rifa del Vehículo.\n\n` +
     `📋 *Solicitud:* #${newId}\n` +
@@ -390,11 +485,15 @@ clearButton.addEventListener("click", () => {
 });
 
 window.addEventListener("storage", (e) => {
-  if (e.key === STORAGE_KEYS.SOLD_NUMBERS || e.key === STORAGE_KEYS.PENDING_NUMBERS) {
+  if (e.key === STORAGE_KEYS.SOLD_NUMBERS ||
+      e.key === STORAGE_KEYS.PENDING_NUMBERS ||
+      e.key === STORAGE_KEYS.REQUESTS) {
     renderNumbers(searchInput.value);
     updateSummary();
   }
 });
 
+// ---------- INICIO ----------
+initCarousel();
 renderNumbers();
 updateSummary();
