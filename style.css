@@ -801,23 +801,27 @@ h2 { font-size: clamp(27px, 4vw, 38px); margin-bottom: 7px; }
 }
 .hero-title-row {
   display: flex;
+  flex-direction: row-reverse;
   align-items: center;
-  gap: 18px;
+  justify-content: flex-end;
+  gap: 22px;
   margin-bottom: 18px;
 }
 .hero-logo {
-  width: 88px;
-  height: 88px;
+  width: 118px;
+  height: 118px;
   border-radius: 50%;
   object-fit: cover;
   flex-shrink: 0;
   border: 2px solid #A1C6EA;
   box-shadow: 0 6px 20px rgba(30, 58, 95, .16);
+  background: #FFFFFF;
 }
-.hero-title-row h1 { margin-bottom: 0; }
+.hero-title-row h1 {
+  margin-bottom: 0;
+}
 
 @media (max-width: 760px) {
-  .hero-title-row { gap: 12px; }
-  .hero-logo { width: 64px; height: 64px; }
+  .hero-title-row { gap: 14px; }
+  .hero-logo { width: 84px; height: 84px; }
 }
-
