@@ -2,26 +2,23 @@ const PRICE_PER_NUMBER = 30;
 const TOTAL_NUMBERS = 1000; // Numeración del 000 al 999
 
 // Número de WhatsApp de la ADMINISTRACIÓN (formato internacional sin '+' ni símbolos)
-// Ejemplo EE. UU. (305) 123-4567 -> "13051234567"
 const ADMIN_WHATSAPP_PHONE = "13050000000";
 
-// Fotos del carrusel del vehículo.
-// Coloca tus imágenes en una carpeta llamada "fotos" junto a estos archivos
-// con estos nombres exactos, o cambia aquí las rutas.
+// Fotos del carrusel del vehículo. Colócalas en la carpeta "fotos/".
 const CAROUSEL_IMAGES = [
   { src: "fotos/carro-1.jpg", alt: "Vista frontal del vehículo" },
   { src: "fotos/carro-2.jpg", alt: "Vista lateral del vehículo" },
-  { src: "fotos/carro-3.jpg", alt: "Interior del vehículo" },
-  { src: "fotos/carro-4.jpg", alt: "Detalle del frente del vehículo" }
+  { src: "fotos/carro-3.jpg", alt: "Vista trasera del vehículo" },
+  { src: "fotos/carro-4.jpg", alt: "Interior del vehículo" },
+  { src: "fotos/carro-5.jpg", alt: "Tablero y volante del vehículo" },
+  { src: "fotos/carro-6.jpg", alt: "Detalle adicional del vehículo" }
 ];
 
-const CAROUSEL_INTERVAL = 4000; // milisegundos entre fotos
+const CAROUSEL_INTERVAL = 4000;
 
-const STORAGE_KEYS = {
-  SOLD_NUMBERS: "rifa_sold_v3",
-  PENDING_NUMBERS: "rifa_pending_v3",
-  REQUESTS: "rifa_requests_v3"
-};
+// ---------- ESTADO EN MEMORIA ----------
+let soldNumbers = new Set();
+let pendingNumbers = new Set();
 
 // ---------- UTILIDADES DE TELÉFONO ----------
 
@@ -35,34 +32,12 @@ function formatPhoneDisplay(countryCode, localNumber) {
   const code = String(countryCode || "").replace(/\D/g, "");
   const local = String(localNumber || "").replace(/\D/g, "");
   if (!local) return `+${code}`;
-
   if ((code === "1" || code === "1809") && local.length === 10) {
     return `+${code} (${local.slice(0, 3)}) ${local.slice(3, 6)}-${local.slice(6)}`;
   }
   const groups = local.match(/.{1,3}/g) || [local];
   return `+${code} ${groups.join(" ")}`;
 }
-
-// ---------- ALMACENAMIENTO ----------
-
-// Números vendidos definitivamente
-function getSoldNumbers() {
-  const saved = localStorage.getItem(STORAGE_KEYS.SOLD_NUMBERS);
-  if (saved) return new Set(JSON.parse(saved));
-  localStorage.setItem(STORAGE_KEYS.SOLD_NUMBERS, JSON.stringify([]));
-  return new Set([]);
-}
-
-// Números apartados / en revisión / a plazos
-function getPendingNumbers() {
-  const saved = localStorage.getItem(STORAGE_KEYS.PENDING_NUMBERS);
-  if (saved) return new Set(JSON.parse(saved));
-  localStorage.setItem(STORAGE_KEYS.PENDING_NUMBERS, JSON.stringify([]));
-  return new Set([]);
-}
-
-let soldNumbers = getSoldNumbers();
-let pendingNumbers = getPendingNumbers();
 
 // ---------- REFERENCIAS DEL DOM ----------
 const grid = document.querySelector("#numbers-grid");
@@ -74,12 +49,10 @@ const totalOutput = document.querySelector("#selection-total");
 const whatsappButton = document.querySelector("#whatsapp-button");
 const emptySearch = document.querySelector("#empty-search");
 
-// Estadísticas del hero
 const statAvailable = document.querySelector("#stat-available");
 const statPending = document.querySelector("#stat-pending");
 const statSold = document.querySelector("#stat-sold");
 
-// Modal de reserva
 const checkoutDialog = document.querySelector("#checkout-dialog");
 const closeCheckoutBtn = document.querySelector("#close-checkout");
 const checkoutForm = document.querySelector("#checkout-form");
@@ -98,22 +71,45 @@ function formatNumber(number) {
   return String(number).padStart(3, "0");
 }
 
+// ---------- CARGA DEL TABLERO DESDE SUPABASE ----------
+
+async function loadBoardFromSupabase() {
+  if (!supabaseClient) {
+    console.error("Supabase no está disponible. Revisa supabase-config.js");
+    return false;
+  }
+
+  const { data, error } = await supabaseClient
+    .from("numeros")
+    .select("numero,estado");
+
+  if (error) {
+    console.error("Error al leer el tablero:", error.message);
+    return false;
+  }
+
+  soldNumbers = new Set();
+  pendingNumbers = new Set();
+
+  (data || []).forEach(row => {
+    if (row.estado === "vendido") soldNumbers.add(row.numero);
+    else if (row.estado === "apartado") pendingNumbers.add(row.numero);
+  });
+
+  return true;
+}
+
 // ---------- CONTADOR DE DISPONIBLES ----------
-
 function updateAvailabilityStats() {
-  const sold = getSoldNumbers();
-  const pending = getPendingNumbers();
-
-  const totalOcupados = new Set([...sold, ...pending]).size;
+  const totalOcupados = new Set([...soldNumbers, ...pendingNumbers]).size;
   const disponibles = TOTAL_NUMBERS - totalOcupados;
 
   if (statAvailable) statAvailable.textContent = disponibles.toLocaleString("es-ES");
-  if (statPending) statPending.textContent = pending.size.toLocaleString("es-ES");
-  if (statSold) statSold.textContent = sold.size.toLocaleString("es-ES");
+  if (statPending) statPending.textContent = pendingNumbers.size.toLocaleString("es-ES");
+  if (statSold) statSold.textContent = soldNumbers.size.toLocaleString("es-ES");
 }
 
-// ---------- CARRUSEL DE FOTOS ----------
-
+// ---------- CARRUSEL ----------
 let carouselIndex = 0;
 let carouselTimer = null;
 
@@ -137,7 +133,6 @@ function initCarousel() {
     image.alt = img.alt;
     image.loading = i === 0 ? "eager" : "lazy";
 
-    // Si la foto todavía no existe, mostramos un marcador discreto
     image.addEventListener("error", () => {
       figure.classList.add("slide-missing");
       image.style.display = "none";
@@ -171,25 +166,13 @@ function initCarousel() {
   }
 
   function nextSlide() { goToSlide(carouselIndex + 1); }
-
-  function startAuto() {
-    stopAuto();
-    carouselTimer = setInterval(nextSlide, CAROUSEL_INTERVAL);
-  }
-
-  function stopAuto() {
-    if (carouselTimer) clearInterval(carouselTimer);
-    carouselTimer = null;
-  }
+  function startAuto() { stopAuto(); carouselTimer = setInterval(nextSlide, CAROUSEL_INTERVAL); }
+  function stopAuto() { if (carouselTimer) clearInterval(carouselTimer); carouselTimer = null; }
 
   nextBtn?.addEventListener("click", () => { nextSlide(); startAuto(); });
   prevBtn?.addEventListener("click", () => { goToSlide(carouselIndex - 1); startAuto(); });
-
-  // Se pausa al pasar el ratón por encima
   carousel?.addEventListener("mouseenter", stopAuto);
   carousel?.addEventListener("mouseleave", startAuto);
-
-  // Pausa también en móvil mientras se toca
   carousel?.addEventListener("touchstart", stopAuto, { passive: true });
   carousel?.addEventListener("touchend", startAuto, { passive: true });
 
@@ -197,7 +180,6 @@ function initCarousel() {
 }
 
 // ---------- SELECTOR DE PAÍS ----------
-
 function getCountryCode() {
   return buyerCountrySelect.value.replace(/\D/g, "");
 }
@@ -243,12 +225,8 @@ buyerPhoneInput.addEventListener("input", () => {
 
 syncPrefix();
 
-// ---------- TABLERO DE NÚMEROS ----------
-
+// ---------- TABLERO ----------
 function renderNumbers(filter = "") {
-  soldNumbers = getSoldNumbers();
-  pendingNumbers = getPendingNumbers();
-
   const normalizedFilter = filter.trim().replace(/\D/g, "");
   grid.replaceChildren();
   buttonsByNumber.clear();
@@ -294,28 +272,19 @@ function renderNumbers(filter = "") {
 }
 
 function toggleNumber(number) {
-  if (selectedNumbers.has(number)) {
-    selectedNumbers.delete(number);
-  } else {
-    selectedNumbers.add(number);
-  }
+  if (selectedNumbers.has(number)) selectedNumbers.delete(number);
+  else selectedNumbers.add(number);
 
   const button = buttonsByNumber.get(number);
   if (button) {
     button.classList.toggle("selected", selectedNumbers.has(number));
     button.setAttribute("aria-pressed", String(selectedNumbers.has(number)));
   }
-
   updateSummary();
 }
 
-// ---------- PRECIOS CON DESCUENTO POR CANTIDAD ----------
-// El descuento se aplica SOLO cuando la cantidad coincide exactamente con el escalón.
-const PROMO_PRICES = {
-  5: 130,
-  10: 250,
-  50: 1200
-};
+// ---------- PRECIOS CON DESCUENTO ----------
+const PROMO_PRICES = { 5: 130, 10: 250, 50: 1200 };
 
 function getTotalPrice(count) {
   if (PROMO_PRICES[count] !== undefined) return PROMO_PRICES[count];
@@ -342,7 +311,6 @@ function updateSummary() {
   countOutput.textContent = `${count} ${count === 1 ? "número seleccionado" : "números seleccionados"}`;
   previewOutput.textContent = count ? numbers.map(formatNumber).join(", ") : "Todavía no has elegido números.";
 
-  // Total: si hay promo, el precio normal tachado arriba y el rebajado en grande debajo
   const originalOutput = document.querySelector("#total-original");
   const savingOutput = document.querySelector("#total-saving");
 
@@ -371,7 +339,6 @@ function updateSummary() {
     }
   }
 
-  // Aviso del próximo escalón de descuento
   const tierHint = document.querySelector("#tier-hint");
   if (tierHint) {
     const next = count > 0 ? getNextTier(count) : { qty: 5, total: 130 };
@@ -388,7 +355,6 @@ function updateSummary() {
 }
 
 // ---------- APARTAR Y ENVIAR ----------
-
 whatsappButton.addEventListener("click", () => {
   if (selectedNumbers.size === 0) return;
   const numbers = [...selectedNumbers].sort((a, b) => a - b);
@@ -405,7 +371,7 @@ whatsappButton.addEventListener("click", () => {
 
 closeCheckoutBtn?.addEventListener("click", () => checkoutDialog.close());
 
-checkoutForm.addEventListener("submit", (e) => {
+checkoutForm.addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const buyerName = buyerNameInput.value.trim();
@@ -425,58 +391,74 @@ checkoutForm.addEventListener("submit", (e) => {
   const numbers = [...selectedNumbers].sort((a, b) => a - b);
   const count = numbers.length;
   const total = getTotalPrice(count);
-  const saving = getSaving(count);
 
-  const rawRequests = localStorage.getItem(STORAGE_KEYS.REQUESTS);
-  const requests = rawRequests ? JSON.parse(rawRequests) : [];
+  const submitBtn = checkoutForm.querySelector("button[type='submit']");
+  if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = "Guardando reserva..."; }
 
-  const newId = `SOL-${String(requests.length + 1).padStart(4, "0")}`;
-  const newRequest = {
-    id: newId,
-    buyer: buyerName,
-    phone: displayPhone,
-    phoneDigits: cleanPhone,
-    countryCode: countryCode,
-    method: "Transferencia / Zelle / Efectivo",
-    numbers: numbers,
-    amount: total,
-    paidAmount: 0,
-    remainingAmount: total,
-    status: "pending",
-    notes: "",
-    createdAt: new Date().toLocaleDateString("es-ES")
-  };
+  try {
+    // 1. Crear la solicitud en Supabase
+    const codigo = `SOL-${Date.now().toString().slice(-6)}`;
 
-  requests.unshift(newRequest);
-  localStorage.setItem(STORAGE_KEYS.REQUESTS, JSON.stringify(requests));
+    const { data: solicitud, error: errSol } = await supabaseClient
+      .from("solicitudes")
+      .insert([{
+        codigo,
+        comprador: buyerName,
+        telefono: displayPhone,
+        telefono_digitos: cleanPhone,
+        codigo_pais: countryCode,
+        metodo: "Transferencia / Zelle / Efectivo",
+        total,
+        abonado: 0,
+        saldo: total,
+        estado: "pendiente",
+        notas: ""
+      }])
+      .select()
+      .single();
 
-  // Los números pasan a apartado de inmediato
-  const pSet = getPendingNumbers();
-  numbers.forEach(n => pSet.add(n));
-  localStorage.setItem(STORAGE_KEYS.PENDING_NUMBERS, JSON.stringify([...pSet]));
+    if (errSol) throw errSol;
 
-  checkoutDialog.close();
-  checkoutForm.reset();
-  syncPrefix();
-  selectedNumbers.clear();
-  renderNumbers(searchInput.value);
-  updateSummary();
+    // 2. Marcar los números como apartados en la base de datos
+    const { error: errNum } = await supabaseClient
+      .from("numeros")
+      .update({ estado: "apartado", solicitud_id: solicitud.id })
+      .in("numero", numbers)
+      .eq("estado", "disponible");
 
-  const formattedNumbers = numbers.map(formatNumber).join(", ");
-  const message = `¡Hola! Acabo de apartar mis números en la web para la Rifa del Vehículo.\n\n` +
-    `📋 *Solicitud:* #${newId}\n` +
-    `👤 *Nombre:* ${buyerName}\n` +
-    `📱 *Teléfono:* ${displayPhone}\n` +
-    `🎟 *Números apartados:* ${formattedNumbers}\n` +
-    `💵 *Total:* $${total} USD${saving > 0 ? ` _(promo aplicada, ahorro de $${saving})_` : ''}\n\n` +
-    `Te adjunto por aquí mi comprobante de pago o conversemos para organizar mi abono a plazos. ¡Gracias!`;
+    if (errNum) throw errNum;
 
-  const waUrl = `https://wa.me/${ADMIN_WHATSAPP_PHONE}?text=${encodeURIComponent(message)}`;
-  window.open(waUrl, "_blank");
+    // 3. Refrescar el tablero con el estado real
+    await loadBoardFromSupabase();
+    renderNumbers(searchInput.value);
+
+    checkoutDialog.close();
+    checkoutForm.reset();
+    syncPrefix();
+    selectedNumbers.clear();
+    updateSummary();
+
+    // 4. Abrir WhatsApp con el mensaje redactado
+    const formattedNumbers = numbers.map(formatNumber).join(", ");
+    const message = `¡Hola! Acabo de apartar mis números en la web para la Rifa del Vehículo.\n\n` +
+      `📋 *Solicitud:* #${codigo}\n` +
+      `👤 *Nombre:* ${buyerName}\n` +
+      `📱 *Teléfono:* ${displayPhone}\n` +
+      `🎟 *Números apartados:* ${formattedNumbers}\n` +
+      `💵 *Total:* $${total} USD\n\n` +
+      `Te adjunto por aquí mi comprobante de pago o conversemos para organizar mi abono a plazos. ¡Gracias!`;
+
+    window.open(`https://wa.me/${ADMIN_WHATSAPP_PHONE}?text=${encodeURIComponent(message)}`, "_blank");
+
+  } catch (err) {
+    console.error("Error al guardar la reserva:", err);
+    alert("No se pudo guardar la reserva. Revisa tu conexión e inténtalo de nuevo.\n\nDetalle: " + (err.message || err));
+  } finally {
+    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = "Apartar números y enviar por WhatsApp ↗"; }
+  }
 });
 
-// ---------- BÚSQUEDA Y SINCRONIZACIÓN ----------
-
+// ---------- BÚSQUEDA ----------
 searchInput.addEventListener("input", () => renderNumbers(searchInput.value));
 clearButton.addEventListener("click", () => {
   selectedNumbers.clear();
@@ -484,16 +466,31 @@ clearButton.addEventListener("click", () => {
   updateSummary();
 });
 
-window.addEventListener("storage", (e) => {
-  if (e.key === STORAGE_KEYS.SOLD_NUMBERS ||
-      e.key === STORAGE_KEYS.PENDING_NUMBERS ||
-      e.key === STORAGE_KEYS.REQUESTS) {
-    renderNumbers(searchInput.value);
-    updateSummary();
-  }
-});
+// ---------- ACTUALIZACIÓN AUTOMÁTICA ----------
+// Cada 15 segundos volvemos a leer la base de datos para reflejar
+// cambios hechos desde otros dispositivos.
+function startAutoRefresh() {
+  setInterval(async () => {
+    const ok = await loadBoardFromSupabase();
+    if (ok) {
+      renderNumbers(searchInput.value);
+      updateSummary();
+    }
+  }, 15000);
+}
 
 // ---------- INICIO ----------
-initCarousel();
-renderNumbers();
-updateSummary();
+async function init() {
+  initCarousel();
+
+  const ok = await loadBoardFromSupabase();
+  if (!ok) {
+    grid.innerHTML = `<p class="empty-search">No se pudo conectar con la base de datos. Recarga la página o revisa supabase-config.js</p>`;
+  }
+
+  renderNumbers();
+  updateSummary();
+  startAutoRefresh();
+}
+
+init();
