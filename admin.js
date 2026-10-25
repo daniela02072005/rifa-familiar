@@ -534,9 +534,9 @@ document.addEventListener("DOMContentLoaded", () => {
         renderAll();
 
         const waMsg =
-          `🎉 *¡PAGO CONFIRMADO - RIFA FIN DE AÑO!* 🎉\n\n` +
+          ` *¡PAGO CONFIRMADO - RIFA FIN DE AÑO!* \n\n` +
           `Hola *${sol.comprador}*, tu pago total de *${money(total)} USD* de la solicitud *#${sol.codigo}* ha sido verificado.\n\n` +
-          `🎟 *Tus números oficiales son:* ${numsFmt.join(", ")}\n\n` +
+          `* *Tus números oficiales son:* ${numsFmt.join(", ")}\n\n` +
           `¡Ya estás participando formalmente! Muchísima suerte.`;
 
         detailsContent.innerHTML = `
