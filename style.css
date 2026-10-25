@@ -1141,17 +1141,16 @@ h2 { font-size: clamp(27px, 4vw, 38px); margin-bottom: 7px; }
   .hero-right { width: 100%; }
   .carousel { width: 100%; }
   .carousel-track {
-    aspect-ratio: 16 / 10;      /* un poco más panorámico en móvil */
-    min-height: 200px;          /* evita que colapse si no hay fotos */
+    aspect-ratio: 16 / 10;
+    min-height: 210px;
   }
 }
 
 @media (max-width: 540px) {
   .carousel-track {
     aspect-ratio: 4 / 3;
-    min-height: 180px;
+    min-height: 190px;
   }
   .carousel-dots { gap: 6px; }
   .carousel-dot { width: 7px; height: 7px; }
 }
-
