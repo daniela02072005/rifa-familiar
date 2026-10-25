@@ -10,8 +10,7 @@ const CAROUSEL_IMAGES = [
   { src: "fotos/carro-2.jpg", alt: "Vista lateral del vehículo" },
   { src: "fotos/carro-3.jpg", alt: "Vista trasera del vehículo" },
   { src: "fotos/carro-4.jpg", alt: "Interior del vehículo" },
-  { src: "fotos/carro-5.jpg", alt: "Tablero y volante del vehículo" },
-  { src: "fotos/carro-6.jpg", alt: "Detalle adicional del vehículo" }
+  { src: "fotos/carro-5.jpg", alt: "Tablero y volante del vehículo" }
 ];
 
 const CAROUSEL_INTERVAL = 4000;
