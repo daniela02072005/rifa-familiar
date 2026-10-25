@@ -5,11 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Administración | Rifa Familiar</title>
     <link rel="stylesheet" href="admin.css">
+    <script src="[cdn.jsdelivr.net](https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2)"></script>
+    <script src="supabase-config.js"></script>
     <script src="admin.js" defer></script>
 </head>
 <body>
 
-    <!-- ACCESO DE DEMOSTRACIÓN -->
+    <!-- ACCESO DE ADMINISTRACIÓN -->
     <section id="login-screen" class="login-screen">
         <div class="login-card">
             <div class="brand-icon">R</div>
@@ -20,12 +22,12 @@
             </p>
 
             <form id="login-form">
-                <label for="username">Usuario</label>
+                <label for="email">Correo de administración</label>
                 <input
-                    type="text"
-                    id="username"
-                    placeholder="Introduce el usuario"
-                    autocomplete="username"
+                    type="email"
+                    id="email"
+                    placeholder="correo@ejemplo.com"
+                    autocomplete="email"
                     required
                 >
 
@@ -46,7 +48,7 @@
             </form>
 
             <p class="demo-note">
-                Puedes ingresar con cualquier usuario y contraseña para probar el sistema.
+                Acceso restringido. Solo las cuentas autorizadas pueden gestionar la rifa.
             </p>
         </div>
     </section>
@@ -64,7 +66,7 @@
             </a>
 
             <div class="topbar-right">
-                <span class="admin-badge">ADMINISTRADORA</span>
+                <span class="admin-badge" id="admin-name">ADMINISTRADORA</span>
                 <button id="logout-button" class="button button-outline">
                     Cerrar sesión
                 </button>
@@ -80,7 +82,7 @@
                 </p>
             </div>
 
-            <div class="demo-label">SISTEMA ACTIVO</div>
+            <div class="demo-label" id="admin-email-label">CONECTADO</div>
         </section>
 
         <!-- RESUMEN DE MÉTRICAS -->
@@ -92,7 +94,7 @@
             </article>
 
             <article class="stat-card stat-pending">
-                <span class="stat-label">En revisión (Amarillo)</span>
+                <span class="stat-label">En revisión (Azul hielo)</span>
                 <strong id="pending-count">0</strong>
                 <span class="stat-description">Apartados esperando comprobante</span>
             </article>
@@ -145,10 +147,10 @@
 
                 <select id="status-filter" aria-label="Filtrar por estado">
                     <option value="all">Todos los estados</option>
-                    <option value="pending">En revisión (Amarillo)</option>
-                    <option value="partial">A plazos / Con abono</option>
-                    <option value="approved">Pagado completo (Vendido)</option>
-                    <option value="rejected">Rechazadas / Liberadas</option>
+                    <option value="pendiente">En revisión</option>
+                    <option value="plazos">A plazos / Con abono</option>
+                    <option value="pagado">Pagado completo (Vendido)</option>
+                    <option value="rechazado">Rechazadas / Liberadas</option>
                 </select>
             </div>
 
@@ -185,7 +187,7 @@
 
     </main>
 
-    <!-- VENTANA MODAL PARA GESTIÓN DE PAGO (COMPLETO O EN PLAZOS) -->
+    <!-- VENTANA MODAL PARA GESTIÓN DE PAGO -->
     <dialog id="details-dialog" class="details-dialog">
         <div class="dialog-header">
             <div>
