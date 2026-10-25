@@ -520,8 +520,8 @@ h2 { font-size: clamp(27px, 4vw, 38px); margin-bottom: 7px; }
 /* PROMOCIONES POR CANTIDAD */
 .promo-strip {
   margin-top: 16px;
-  padding: 20px 22px;
-  background: #141412;
+  padding: 20px 22px; 
+  background: #E0E9F6;
   border: 1px solid var(--line);
   border-radius: var(--radius);
 }
