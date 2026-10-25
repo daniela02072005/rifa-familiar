@@ -3,10 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Administración | Rifa Fin de Año</title>
+    <title>Administración | Rifa Familiar</title>
     <link rel="stylesheet" href="admin.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabase-config.js"></script>
     <script src="admin.js" defer></script>
 </head>
 <body>
@@ -22,12 +20,12 @@
             </p>
 
             <form id="login-form">
-                <label for="email">Correo de administración</label>
+                <label for="username">Usuario</label>
                 <input
-                    type="email"
-                    id="email"
-                    placeholder="correo@ejemplo.com"
-                    autocomplete="email"
+                    type="text"
+                    id="username"
+                    placeholder="Introduce el usuario"
+                    autocomplete="username"
                     required
                 >
 
@@ -48,7 +46,7 @@
             </form>
 
             <p class="demo-note">
-                Acceso restringido. Solo las cuentas autorizadas pueden gestionar la rifa.
+                Puedes ingresar con cualquier usuario y contraseña para probar el sistema.
             </p>
         </div>
     </section>
@@ -66,7 +64,7 @@
             </a>
 
             <div class="topbar-right">
-                <span class="admin-badge" id="admin-name">ADMINISTRADORA</span>
+                <span class="admin-badge">ADMINISTRADORA</span>
                 <button id="logout-button" class="button button-outline">
                     Cerrar sesión
                 </button>
@@ -82,7 +80,7 @@
                 </p>
             </div>
 
-            <div class="demo-label" id="admin-email-label">CONECTADO</div>
+            <div class="demo-label">SISTEMA ACTIVO</div>
         </section>
 
         <!-- RESUMEN DE MÉTRICAS -->
