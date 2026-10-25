@@ -1130,4 +1130,9 @@ h2 { font-size: clamp(27px, 4vw, 38px); margin-bottom: 7px; }
   .hero-title-row { gap: 14px; }
   .hero-logo { width: 84px; height: 84px; }
 }
-
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;   /* mitad y mitad */
+  gap: 52px;
+  align-items: center;
+}
