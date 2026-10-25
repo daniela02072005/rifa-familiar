@@ -407,7 +407,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <div class="checklist">
               <label>
                 <input type="checkbox" id="check-bank-account">
-                <span>He verificado el ingreso real (Zelle / banco / efectivo) antes de registrar el movimiento.</span>
+                <span>He verificado el ingreso real (Zelle) antes de registrar el movimiento.</span>
               </label>
             </div>
           </section>
@@ -534,7 +534,7 @@ document.addEventListener("DOMContentLoaded", () => {
         renderAll();
 
         const waMsg =
-          `🎉 *¡PAGO CONFIRMADO - RIFA FAMILIAR!* 🎉\n\n` +
+          `🎉 *¡PAGO CONFIRMADO - RIFA FIN DE AÑO!* 🎉\n\n` +
           `Hola *${sol.comprador}*, tu pago total de *${money(total)} USD* de la solicitud *#${sol.codigo}* ha sido verificado.\n\n` +
           `🎟 *Tus números oficiales son:* ${numsFmt.join(", ")}\n\n` +
           `¡Ya estás participando formalmente! Muchísima suerte.`;
@@ -618,12 +618,12 @@ document.addEventListener("DOMContentLoaded", () => {
         renderAll();
 
         const waMsgAbono =
-          `📑 *RECIBO DE ABONO - RIFA FAMILIAR* 📑\n\n` +
+          ` *RECIBO DE ABONO - RIFA FAMILIAR* \n\n` +
           `Hola *${sol.comprador}*, registramos tu abono de *${money(abonoValor)} USD* de la solicitud *#${sol.codigo}*.\n\n` +
-          `🎟 *Boletas apartadas:* ${numsFmt.join(", ")}\n` +
-          `💵 *Total abonado:* ${money(nuevoAbonado)} USD\n` +
-          `⏳ *Saldo pendiente:* ${money(nuevoSaldo)} USD\n\n` +
-          `${notaTexto ? `📌 *Acuerdo:* ${notaTexto}\n\n` : ""}` +
+          `* *Boletas apartadas:* ${numsFmt.join(", ")}\n` +
+          `* *Total abonado:* ${money(nuevoAbonado)} USD\n` +
+          `* *Saldo pendiente:* ${money(nuevoSaldo)} USD\n\n` +
+          `${notaTexto ? `* *Acuerdo:* ${notaTexto}\n\n` : ""}` +
           `Tus números siguen apartados y protegidos a tu nombre. ¡Gracias!`;
 
         detailsContent.innerHTML = `
