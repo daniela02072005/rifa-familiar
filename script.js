@@ -501,7 +501,7 @@ checkoutForm.addEventListener("submit", async (e) => {
     const formattedNumbers = numbers.map(formatNumber).join(", ");
     const comprobanteAviso = comprobanteUrl
       ? `\n📎 *Comprobante:* Adjuntado en la web\n`
-      : `\nTe adjunto por aquí mi comprobante de pago o conversemos para organizar mi abono a plazos.\n`;
+      : `\nTe adjunto por aquí mi comprobante de pago\n`;
 
     const message = `¡Hola! Acabo de apartar mis números en la web para la Rifa del Vehículo.\n\n` +
       `*Solicitud:* #${codigo}\n` +
