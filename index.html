@@ -3,18 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#1E3A5F">
   <title>Rifa Familiar | Elige tus números</title>
   <link rel="icon" href="fotos/favicon.ico" sizes="any">
   <link rel="icon" type="image/png" sizes="32x32" href="fotos/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="fotos/favicon-16x16.png">
   <link rel="apple-touch-icon" sizes="180x180" href="fotos/apple-touch-icon.png">
+  <meta name="theme-color" content="#1E3A5F">
   <link rel="stylesheet" href="style.css">
-  <script src="[cdn.jsdelivr.net](https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2)"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
   <script src="script.js" defer></script>
 </head>
-
 <body>
 
   <header class="site-header">
@@ -32,13 +31,10 @@
 
         <div class="hero-left">
           <p class="eyebrow"><span></span>Sorteo oficial</p>
-                   <div class="hero-title-row">
-            <img src="img/logo.png" alt="Sorteos JC" class="hero-logo">
+          <div class="hero-title-row">
+            <img src="fotos/logo-hero.png" alt="Sorteos JC" class="hero-logo">
             <h1>Tu número.<br><span>Tu oportunidad.</span></h1>
           </div>
-
-          </div>
-
           <p class="hero-copy">
             Elige tus números favoritos, aparta tus boletos y asegura tu participación en nuestra gran rifa familiar.
           </p>
@@ -61,7 +57,7 @@
           <div class="hero-rule"></div>
 
           <p class="demo-note">
-            <span class="demo-dot"></span> Los números apartados quedan en azul hasta que se confirme el pago
+            <span class="demo-dot"></span> Los números apartados quedan en amarillo hasta que se confirme el pago o abono
           </p>
 
           <div class="hero-stats">
@@ -91,6 +87,7 @@
 
             <div class="carousel-dots" id="carousel-dots" role="tablist" aria-label="Selector de fotos"></div>
           </div>
+          <p class="carousel-caption">Vista previa del vehículo</p>
         </div>
 
       </div>
@@ -108,15 +105,15 @@
         <article class="prize-card prize-card-first">
           <span class="prize-badge">1er PREMIO</span>
           <div class="prize-visual" aria-hidden="true">🚗</div>
-          <h3>Honda Crv 2016 LX</h3>
+          <h3>El Vehículo</h3>
           <p>El gran premio principal de esta edición especial.</p>
         </article>
 
         <article class="prize-card">
           <span class="prize-badge">2do PREMIO</span>
           <div class="prize-visual" aria-hidden="true">📱</div>
-          <h3>iPhone 18 PRO MAX</h3>
-          <p>El último modelo entegado y sellado.</p>
+          <h3>iPhone 18</h3>
+          <p>El último modelo, entregado sellado y con garantía.</p>
         </article>
 
         <article class="prize-card">
@@ -144,14 +141,14 @@
       <div class="draw-strip">
         <div class="draw-intro">
           <p class="draw-kicker">Sorteo oficial</p>
-          <h3 class="draw-title">Participa con la <span>Loteria Pick 4 Noche</span></h3>
+          <h3 class="draw-title">Participa con la <span>Loteria Pick 4</span></h3>
           <p class="draw-sub">Tres oportunidades de ganar. Cada premio se juega en una fecha distinta.</p>
         </div>
 
         <div class="draw-cards">
           <article class="draw-card draw-card-first">
             <span class="draw-badge">1er Premio</span>
-            <h4 class="draw-prize">Honda Crv 2016 LX</h4>
+            <h4 class="draw-prize">El Vehículo</h4>
             <p class="draw-date">
               <span class="draw-date-label">Se juega el</span>
               <strong>26 de diciembre</strong>
@@ -160,7 +157,7 @@
 
           <article class="draw-card">
             <span class="draw-badge">2do Premio</span>
-            <h4 class="draw-prize">iPhone 18 PRO MAX</h4>
+            <h4 class="draw-prize">iPhone 18</h4>
             <p class="draw-date">
               <span class="draw-date-label">Se juega el</span>
               <strong>12 de diciembre</strong>
@@ -245,7 +242,8 @@
       <p class="fine-print">
         Al continuar, tus números quedarán apartados (en azul) de inmediato para proteger tu turno mientras gestionas el pago o abono.
       </p>
-       <div class="min-sales-notice" role="note">
+
+      <div class="min-sales-notice" role="note">
         <span class="notice-icon" aria-hidden="true">!</span>
         <div class="notice-body">
           <strong class="notice-title">Condición del sorteo</strong>
@@ -269,12 +267,12 @@
         <article class="step">
           <span class="step-number">02</span>
           <h3>Aparta tus números</h3>
-          <p>Indica tu nombre y tu teléfono. Quedarán apartados en azul para que nadie más los tome.</p>
+          <p>Indica tu nombre y tu teléfono. Quedarán apartados en amarillo para que nadie más los tome.</p>
         </article>
         <article class="step">
           <span class="step-number">03</span>
-          <h3>Pago </h3>
-          <p>Envía tu comprobante de pago completo</p>
+          <h3>Pago o abono a plazos</h3>
+          <p>Envía tu comprobante de pago completo o coordina tu plan de abonos a plazos directamente por WhatsApp.</p>
         </article>
       </div>
     </section>
@@ -282,10 +280,8 @@
 
   <footer class="site-footer">
     <span class="brand-mark small">RF</span>
-    <p>Rifa Fin de Año <span>·</span> Edición Especial</p>
+    <p>Rifa Familiar <span>·</span> Edición Especial</p>
     <p class="footer-note">Administración y atención directa por WhatsApp.</p>
-        <p class="footer-note">Desarrollo web: <strong>Daniela</strong></p>
-
   </footer>
 
   <!-- MODAL DE DATOS DE CONTACTO -->
@@ -306,7 +302,7 @@
         </div>
         <div class="row">
           <span>Total a pagar:</span>
-          <strong id="modal-total-preview" class="gold-text">/bin/bash USD</strong>
+          <strong id="modal-total-preview" class="gold-text">$0 USD</strong>
         </div>
       </div>
 
@@ -344,7 +340,7 @@
           </div>
         </div>
 
-        <p class="payment-note">💡 <em>Pon tu nombre en la nota de Zelle.</em></p>
+        <p class="payment-note">💡 <em>Pon tu nombre en la nota de Zelle. Si pagas a plazos, puedes transferir la cantidad acordada.</em></p>
       </div>
 
       <div class="form-section-divider">
@@ -353,17 +349,17 @@
 
       <div class="form-group">
         <label for="buyer-name">Nombre y apellido</label>
-        <input type="text" id="buyer-name" placeholder="Ej. David Cuellar" required autocomplete="name">
+        <input type="text" id="buyer-name" placeholder="Ej. Carlos Mendoza" required autocomplete="name">
       </div>
 
       <div class="form-group">
         <label for="buyer-country">País de contacto</label>
         <select id="buyer-country" required>
-          <option value="1" data-digits="10" selected>🇺🇸 Estados Unidos (+1)</option> 
-          <option value="57" data-digits="10">🇨🇴 Colombia (+57)</option>
-          <option value="34" data-digits="9">🇪🇸 España (+34)</option>
+          <option value="1" data-digits="10" selected>🇺🇸 Estados Unidos (+1)</option>
           <option value="52" data-digits="10">🇲🇽 México (+52)</option>
+          <option value="57" data-digits="10">🇨🇴 Colombia (+57)</option>
           <option value="58" data-digits="10">🇻🇪 Venezuela (+58)</option>
+          <option value="34" data-digits="9">🇪🇸 España (+34)</option>
           <option value="51" data-digits="9">🇵🇪 Perú (+51)</option>
           <option value="56" data-digits="9">🇨🇱 Chile (+56)</option>
           <option value="54" data-digits="10">🇦🇷 Argentina (+54)</option>
@@ -401,7 +397,7 @@
 
       <!-- ADJUNTAR COMPROBANTE DE PAGO -->
       <div class="form-group file-upload-group">
-        <label for="payment-receipt">📷 Adjuntar comprobante de pago</label>
+        <label for="payment-receipt">📷 Adjuntar comprobante de pago (Opcional)</label>
         <div class="receipt-upload-box" id="receipt-dropzone">
           <input type="file" id="payment-receipt" accept="image/*,.pdf" class="receipt-file-input">
           <div class="receipt-upload-content">
@@ -417,7 +413,7 @@
       </button>
 
       <p class="micro-note">
-        Tus números pasarán a estado <strong>Apartado (azul)</strong> inmediatamente en el tablero público.
+        Tus números pasarán a estado <strong>Apartado (amarillo)</strong> inmediatamente en el tablero público.
       </p>
     </form>
   </dialog>
