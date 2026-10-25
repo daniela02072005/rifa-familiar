@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#101010">
-  <title>Rifa Familiar | Elige tus números</title>
+  <title>Rifa Fin de Año | Elige tus números</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
@@ -50,7 +50,7 @@
           <div class="hero-rule"></div>
 
           <p class="demo-note">
-            <span class="demo-dot"></span> Los números apartados quedan en amarillo hasta que se confirme el pago o abono
+            <span class="demo-dot"></span> Los números apartados quedan en azul hasta que se confirme el pago
           </p>
 
           <div class="hero-stats">
@@ -233,7 +233,7 @@
       </button>
 
       <p class="fine-print">
-        Al continuar, tus números quedarán apartados (en amarillo) de inmediato para proteger tu turno mientras gestionas el pago o abono.
+        Al continuar, tus números quedarán apartados (en azul) de inmediato para proteger tu turno mientras gestionas el pago o abono.
       </p>
     </section>
 
@@ -322,7 +322,7 @@
           </div>
         </div>
 
-        <p class="payment-note">💡 <em>Pon tu nombre en la nota de Zelle. Si pagas a plazos, puedes transferir la cantidad acordada.</em></p>
+        <p class="payment-note">💡 <em>Pon tu nombre en la nota de Zelle.</em></p>
       </div>
 
       <div class="form-section-divider">
@@ -331,17 +331,17 @@
 
       <div class="form-group">
         <label for="buyer-name">Nombre y apellido</label>
-        <input type="text" id="buyer-name" placeholder="Ej. Carlos Mendoza" required autocomplete="name">
+        <input type="text" id="buyer-name" placeholder="Ej. David Cuellar" required autocomplete="name">
       </div>
 
       <div class="form-group">
         <label for="buyer-country">País de contacto</label>
         <select id="buyer-country" required>
-          <option value="1" data-digits="10" selected>🇺🇸 Estados Unidos (+1)</option>
-          <option value="52" data-digits="10">🇲🇽 México (+52)</option>
+          <option value="1" data-digits="10" selected>🇺🇸 Estados Unidos (+1)</option> 
           <option value="57" data-digits="10">🇨🇴 Colombia (+57)</option>
-          <option value="58" data-digits="10">🇻🇪 Venezuela (+58)</option>
           <option value="34" data-digits="9">🇪🇸 España (+34)</option>
+          <option value="52" data-digits="10">🇲🇽 México (+52)</option>
+          <option value="58" data-digits="10">🇻🇪 Venezuela (+58)</option>
           <option value="51" data-digits="9">🇵🇪 Perú (+51)</option>
           <option value="56" data-digits="9">🇨🇱 Chile (+56)</option>
           <option value="54" data-digits="10">🇦🇷 Argentina (+54)</option>
@@ -379,7 +379,7 @@
 
       <!-- ADJUNTAR COMPROBANTE DE PAGO -->
       <div class="form-group file-upload-group">
-        <label for="payment-receipt">📷 Adjuntar comprobante de pago (Opcional)</label>
+        <label for="payment-receipt">📷 Adjuntar comprobante de pago</label>
         <div class="receipt-upload-box" id="receipt-dropzone">
           <input type="file" id="payment-receipt" accept="image/*,.pdf" class="receipt-file-input">
           <div class="receipt-upload-content">
@@ -395,7 +395,7 @@
       </button>
 
       <p class="micro-note">
-        Tus números pasarán a estado <strong>Apartado (amarillo)</strong> inmediatamente en el tablero público.
+        Tus números pasarán a estado <strong>Apartado (azul)</strong> inmediatamente en el tablero público.
       </p>
     </form>
   </dialog>
