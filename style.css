@@ -1136,3 +1136,22 @@ h2 { font-size: clamp(27px, 4vw, 38px); margin-bottom: 7px; }
   gap: 52px;
   align-items: center;
 }
+/* CARRUSEL EN MÓVIL Y TABLET */
+@media (max-width: 980px) {
+  .hero-right { width: 100%; }
+  .carousel { width: 100%; }
+  .carousel-track {
+    aspect-ratio: 16 / 10;      /* un poco más panorámico en móvil */
+    min-height: 200px;          /* evita que colapse si no hay fotos */
+  }
+}
+
+@media (max-width: 540px) {
+  .carousel-track {
+    aspect-ratio: 4 / 3;
+    min-height: 180px;
+  }
+  .carousel-dots { gap: 6px; }
+  .carousel-dot { width: 7px; height: 7px; }
+}
+
