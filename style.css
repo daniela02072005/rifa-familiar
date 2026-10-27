@@ -1154,3 +1154,23 @@ h2 { font-size: clamp(27px, 4vw, 38px); margin-bottom: 7px; }
   .carousel-dot { width: 7px; height: 7px; }
   .carousel-arrow { width: 34px; height: 34px; font-size: 20px; }
 }
+/* ============================================================
+   FIRMA DE DESARROLLO (PIE DE PÁGINA)
+   ============================================================ */
+.dev-signature {
+  width: 100%;
+  margin: 10px 0 0 !important;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  font-size: 10px;
+  letter-spacing: .06em;
+  color: var(--muted-light);
+}
+.dev-signature strong {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+@media (max-width: 760px) {
+  .dev-signature { margin-left: 0 !important; text-align: center; }
+}
